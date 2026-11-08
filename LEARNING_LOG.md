@@ -141,3 +141,18 @@ At the end of each meaningful lesson or coding session, update:
 - **Exact next step**
 
 Keep this log concise enough to maintain, but specific enough that a new session can resume without guessing.
+
+### 2026-11-08 — Connecting server fundamentals to prior Node.js experience
+
+**Learner context clarified**
+- The learner has previously implemented a server using TypeScript and Node.js.
+- Client/server communication, listening servers, and HTTP request/response are therefore familiar concepts from prior practical work; use them as a bridge rather than reteaching them from zero.
+- The learner has not yet established equivalent knowledge of Java server development or Spring Boot.
+
+**Teaching adjustment**
+- Compare Node.js concepts with Java/Spring Boot equivalents where useful.
+- Avoid assuming which Node framework or APIs were used; ask or inspect an example before making framework-specific comparisons.
+- Focus on new material: Java runtime/application startup, embedded server integration, Spring application context, dependency injection, controllers, services, and framework lifecycle.
+
+**Understanding status:** Prior hands-on exposure reported by learner; exact implementation details not yet reviewed. Do not mark Spring Boot knowledge as demonstrated.
+
