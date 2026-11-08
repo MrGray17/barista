@@ -247,3 +247,23 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Explain why the Barista API process will use a web server while a worker process may be a non-web application.
 - Then check understanding with a small design exercise before generating the Spring Boot project.
 
+### 2026-11-08 — Learning adjustment: Spring vs Spring Boot needs a simpler explanation
+
+**Learner feedback**
+- Learner reported losing the thread during the Spring lesson and reasonably assumed Spring Boot and Spring were the same thing.
+- The previous explanation introduced too many terms (framework, library, IoC, DI, application context, beans, auto-configuration, starters, embedded server) in one lesson.
+
+**Teaching correction**
+- Explain only the essential distinction first:
+  - Spring Framework is the underlying framework providing core capabilities such as dependency injection and Spring MVC.
+  - Spring Boot builds on Spring Framework and makes Spring applications easier to set up, configure, and run (for example through starters, auto-configuration, and embedded servers).
+  - They are not alternatives; a typical Spring Boot application uses Spring Framework underneath.
+- Acknowledge that people casually say "Spring" to refer to the broader Spring ecosystem or a Spring Boot application, which can make the names sound interchangeable.
+- Do not introduce more Spring internals until this distinction is understood.
+- Use one concrete analogy and one Barista-specific example, then ask a single short check question.
+- Reduce lesson density and avoid advancing to Maven/project generation until the learner is comfortable.
+
+**Mastery status**
+- Spring vs Spring Boot: distinction needs to be retaught simply; not yet demonstrated.
+- DI, IoC, application context, beans, auto-configuration: previously mentioned, but should be treated as not yet understood/mastered and revisited later in smaller steps.
+
