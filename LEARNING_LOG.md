@@ -281,3 +281,19 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Teaching note**
 - Avoid using "web app" ambiguously. Say "backend web service/API" for Spring Boot and "browser frontend/dashboard" for React.
 
+### 2026-11-08 — Checkpoint 03: Backend service vs browser frontend
+
+**Clarified**
+- "Web application" does not mean JavaScript-only.
+- A browser frontend is commonly built with HTML/CSS/JavaScript or TypeScript.
+- A backend HTTP service can be built with Java/Spring Boot, Node.js, Python, C#, Go, and other technologies.
+- Barista's initial Spring Boot component is a backend API/service. A React + TypeScript operator dashboard is a separate frontend that may be added later.
+- HTTP provides a language-independent communication contract between the browser/client and backend.
+
+**Learner response**
+- Learner confirmed that the frontend/backend distinction now makes sense.
+- Treat as an initial clarification, not yet a detailed independent teach-back.
+
+**Next step**
+- Continue Spring fundamentals one concept at a time. Revisit dependency injection with a small plain-Java example before discussing Spring annotations or the application context.
+
