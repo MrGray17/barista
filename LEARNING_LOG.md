@@ -267,3 +267,17 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Spring vs Spring Boot: distinction needs to be retaught simply; not yet demonstrated.
 - DI, IoC, application context, beans, auto-configuration: previously mentioned, but should be treated as not yet understood/mastered and revisited later in smaller steps.
 
+### 2026-11-08 — Clarification: web applications are not JavaScript-only
+
+**Concept clarified**
+- "Web application" is a broad term; it does not mean "an application written in JavaScript".
+- A web system commonly has a browser-facing frontend and a backend server, and these can be written in different languages.
+- The frontend commonly uses HTML, CSS, and JavaScript/TypeScript in the browser.
+- The backend can be written in Java with Spring Boot, JavaScript/TypeScript with Node.js, Python, C#, Go, etc.
+- The browser communicates with the backend through HTTP; the browser does not need to know which programming language the server uses.
+- Barista's Spring Boot component is the backend HTTP API. A separate React + TypeScript dashboard may be added later as the frontend/operator interface.
+- More precisely, Barista itself is initially a backend service/API, not a browser UI.
+
+**Teaching note**
+- Avoid using "web app" ambiguously. Say "backend web service/API" for Spring Boot and "browser frontend/dashboard" for React.
+
