@@ -156,3 +156,52 @@ Keep this log concise enough to maintain, but specific enough that a new session
 
 **Understanding status:** Prior hands-on exposure reported by learner; exact implementation details not yet reviewed. Do not mark Spring Boot knowledge as demonstrated.
 
+### Learning checkpoint 00 — Project purpose and client/server foundations
+
+**Prior experience confirmed**
+- Learner has implemented a server using Node.js's native `http` module (not Express).
+- Use that experience as the comparison baseline when introducing Java HTTP servers and Spring Boot.
+- Do not assume detailed knowledge of the exact Node server implementation until the learner shares or explains it.
+
+**Topics covered in this learning unit**
+- Barista is intended to accept background work separately from executing it.
+- HTTP follows a client-request / server-response model.
+- A browser or another application can act as an HTTP client; a server application receives and handles requests.
+- A server is a program providing a service, not necessarily a dedicated physical machine.
+- A port identifies a network endpoint used by an application; `localhost:8080` refers to port 8080 on the same machine.
+- Spring Boot can start an embedded web server (commonly Tomcat for a Spring MVC application) so a Java application can receive HTTP requests.
+- A job queue is one way to manage work for later execution. Synchronous calls, in-process background threads/executors, scheduled scripts, and direct service calls are alternatives with different trade-offs.
+- A response that says a job was accepted is not a claim that the job has completed.
+- Durable job acceptance requires recording the work durably before acknowledging it; a transient in-memory task can be lost when its process stops.
+
+**Checkpoint status**
+- **Known from prior hands-on experience:** learner has built a Node.js server with the native `http` module.
+- **Introduced, not yet independently demonstrated in this project:** client/server request flow, HTTP requests/responses, ports, localhost, and the role of Spring Boot.
+- **Not yet covered in depth:** TCP sockets, DNS, HTTP message structure, Java web-server internals, Spring ApplicationContext, beans, dependency injection, request routing, and application lifecycle.
+- **Implemented in Barista:** only this learning log; no application code exists yet.
+
+**Checkpoint review questions**
+1. In your Node server, what code created the HTTP server and what code made it listen for connections?
+2. What is the difference between a client, a server program, and the physical machine hosting that program?
+3. When a browser visits `http://localhost:8080`, what does `localhost` identify and what does `8080` identify?
+4. Why does an accepted background job need durable storage before the API confirms acceptance?
+
+**Next step**
+- Briefly connect the learner's native Node `http` implementation to the equivalent Java/Spring Boot responsibilities.
+- Then learn the role of the Java runtime and how a Spring Boot application starts an embedded web server.
+- Do not advance into Spring annotations or dependency injection until the basic Java application and server lifecycle are clear.
+
+## Checkpoint policy
+
+Create a learning checkpoint after each meaningful concept cluster, design milestone, implementation milestone, or significant debugging session—not after every small message.
+
+Each checkpoint should separate:
+- What was explained.
+- What the learner attempted.
+- What the learner can currently explain or demonstrate independently.
+- What was implemented and how it was verified.
+- Misconceptions, gaps, or open questions.
+- The exact next step.
+
+Update this file at those checkpoints. Keep the main progress record concise and factual; never mark learning as mastered solely because an explanation was provided.
+
