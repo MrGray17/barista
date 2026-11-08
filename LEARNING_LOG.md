@@ -158,10 +158,11 @@ Keep this log concise enough to maintain, but specific enough that a new session
 
 ### Learning checkpoint 00 — Project purpose and client/server foundations
 
-**Prior experience confirmed**
-- Learner has implemented a server using Node.js's native `http` module (not Express).
-- Use that experience as the comparison baseline when introducing Java HTTP servers and Spring Boot.
-- Do not assume detailed knowledge of the exact Node server implementation until the learner shares or explains it.
+**Prior experience reported, but not currently retained**
+- Learner mentioned having implemented a server with Node.js's native `http` module a long time ago.
+- Learner does not remember the project details or implementation.
+- Do not assume this is usable working knowledge, and do not quiz the learner on that old implementation.
+- Teach client/server and HTTP fundamentals from the ground up. Node.js can be mentioned as an optional comparison only when it genuinely helps.
 
 **Topics covered in this learning unit**
 - Barista is intended to accept background work separately from executing it.
@@ -175,19 +176,19 @@ Keep this log concise enough to maintain, but specific enough that a new session
 - Durable job acceptance requires recording the work durably before acknowledging it; a transient in-memory task can be lost when its process stops.
 
 **Checkpoint status**
-- **Known from prior hands-on experience:** learner has built a Node.js server with the native `http` module.
+- **Prior exposure only:** learner once implemented a Node.js native HTTP server but does not remember its details; do not count this as demonstrated knowledge.
 - **Introduced, not yet independently demonstrated in this project:** client/server request flow, HTTP requests/responses, ports, localhost, and the role of Spring Boot.
 - **Not yet covered in depth:** TCP sockets, DNS, HTTP message structure, Java web-server internals, Spring ApplicationContext, beans, dependency injection, request routing, and application lifecycle.
 - **Implemented in Barista:** only this learning log; no application code exists yet.
 
 **Checkpoint review questions**
-1. In your Node server, what code created the HTTP server and what code made it listen for connections?
+1. In general, what is the difference between a client and a server?
 2. What is the difference between a client, a server program, and the physical machine hosting that program?
 3. When a browser visits `http://localhost:8080`, what does `localhost` identify and what does `8080` identify?
 4. Why does an accepted background job need durable storage before the API confirms acceptance?
 
 **Next step**
-- Briefly connect the learner's native Node `http` implementation to the equivalent Java/Spring Boot responsibilities.
+- Continue teaching client/server, HTTP request/response, ports, and localhost from first principles, checking understanding with fresh examples rather than relying on past Node.js code.
 - Then learn the role of the Java runtime and how a Spring Boot application starts an embedded web server.
 - Do not advance into Spring annotations or dependency injection until the basic Java application and server lifecycle are clear.
 
