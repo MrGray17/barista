@@ -142,19 +142,13 @@ At the end of each meaningful lesson or coding session, update:
 
 Keep this log concise enough to maintain, but specific enough that a new session can resume without guessing.
 
-### 2026-11-08 — Connecting server fundamentals to prior Node.js experience
+### 2026-11-08 — Previous Node.js experience clarified
 
-**Learner context clarified**
-- The learner has previously implemented a server using TypeScript and Node.js.
-- Client/server communication, listening servers, and HTTP request/response are therefore familiar concepts from prior practical work; use them as a bridge rather than reteaching them from zero.
-- The learner has not yet established equivalent knowledge of Java server development or Spring Boot.
-
-**Teaching adjustment**
-- Compare Node.js concepts with Java/Spring Boot equivalents where useful.
-- Avoid assuming which Node framework or APIs were used; ask or inspect an example before making framework-specific comparisons.
-- Focus on new material: Java runtime/application startup, embedded server integration, Spring application context, dependency injection, controllers, services, and framework lifecycle.
-
-**Understanding status:** Prior hands-on exposure reported by learner; exact implementation details not yet reviewed. Do not mark Spring Boot knowledge as demonstrated.
+- Learner once implemented a server with Node.js's native `http` module, but this was some time ago and the implementation is not remembered.
+- Treat this as prior exposure, not current demonstrated knowledge. Do not quiz the learner on that old code.
+- Learner has now clarified that basic Java and JVM concepts are already familiar.
+- Do not restart with elementary Java syntax or a generic JDK/JVM/JRE lesson. Build on the learner's stated baseline, and fill gaps when they become relevant in implementation.
+- Spring Boot and Java backend framework knowledge remain new and should be taught carefully from first principles.
 
 ### Learning checkpoint 00 — Project purpose and client/server foundations
 
@@ -176,7 +170,8 @@ Keep this log concise enough to maintain, but specific enough that a new session
 - Durable job acceptance requires recording the work durably before acknowledging it; a transient in-memory task can be lost when its process stops.
 
 **Checkpoint status**
-- **Prior exposure only:** learner once implemented a Node.js native HTTP server but does not remember its details; do not count this as demonstrated knowledge.
+- **Familiarity reported by learner:** basic Java and JVM concepts. Do not reteach these from zero; validate specific gaps naturally through project work.
+- **Prior exposure only:** a Node.js native HTTP server was implemented in the past, but its details are not remembered.
 - **Introduced, not yet independently demonstrated in this project:** client/server request flow, HTTP requests/responses, ports, localhost, and the role of Spring Boot.
 - **Not yet covered in depth:** TCP sockets, DNS, HTTP message structure, Java web-server internals, Spring ApplicationContext, beans, dependency injection, request routing, and application lifecycle.
 - **Implemented in Barista:** only this learning log; no application code exists yet.
@@ -188,9 +183,9 @@ Keep this log concise enough to maintain, but specific enough that a new session
 4. Why does an accepted background job need durable storage before the API confirms acceptance?
 
 **Next step**
-- Continue teaching client/server, HTTP request/response, ports, and localhost from first principles, checking understanding with fresh examples rather than relying on past Node.js code.
-- Then learn the role of the Java runtime and how a Spring Boot application starts an embedded web server.
-- Do not advance into Spring annotations or dependency injection until the basic Java application and server lifecycle are clear.
+- Do not spend more time on elementary Java or JVM explanations unless implementation reveals a concrete gap.
+- Finish the current introductory networking thread only as needed: client/server, URL host and port, HTTP request routing, and the role of an embedded web server.
+- Move next into Spring Boot's application startup, embedded server, application context, beans, and dependency injection, explaining each new framework concept from first principles.
 
 ## Checkpoint policy
 
@@ -206,3 +201,26 @@ Each checkpoint should separate:
 
 Update this file at those checkpoints. Keep the main progress record concise and factual; never mark learning as mastered solely because an explanation was provided.
 
+
+
+### 2026-11-08 — Learning checkpoint 01: Learner's Java baseline clarified
+
+**Learner clarification**
+- Learner is already familiar with basic Java and JVM concepts.
+- The old Node.js native HTTP server project is not remembered, so it should not be used as a recall exercise.
+
+**Teaching adjustment**
+- Treat basic Java/JVM as existing familiarity, not as a topic to reteach wholesale.
+- Begin with the Spring Boot/backend concepts that are new, and revisit Java details selectively when actual code requires them.
+- Continue to explain unfamiliar framework and networking concepts from first principles, without assuming that basic Java familiarity implies knowledge of Spring, HTTP internals, or distributed systems.
+
+**Current project state**
+- GitHub repository: `MrGray17/barista`.
+- `LEARNING_LOG.md` exists and is maintained in the repository.
+- No Barista application code has been implemented yet.
+- Lesson 03 introduced URL components, localhost, ports, TCP at a high level, sockets, and the high-level Spring Boot startup flow. The learner has not completed the checkpoint exercise about identifying the port in a URL.
+
+**Next step**
+- Avoid a generic JVM/JDK lesson.
+- Continue with the Spring Boot application lifecycle and how an embedded HTTP server is configured and started.
+- Before generating the application, confirm the local repository is synchronized and review the current local setup; then create the smallest Spring Boot project and inspect every generated file relevant to startup.
