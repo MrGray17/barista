@@ -224,3 +224,26 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Avoid a generic JVM/JDK lesson.
 - Continue with the Spring Boot application lifecycle and how an embedded HTTP server is configured and started.
 - Before generating the application, confirm the local repository is synchronized and review the current local setup; then create the smallest Spring Boot project and inspect every generated file relevant to startup.
+
+### 2026-11-08 — Lesson 04: Frameworks, Spring Framework, and dependency injection (introductory)
+
+**Topics introduced**
+- A framework provides application structure, conventions, reusable infrastructure, and extension points.
+- Library vs framework: application code typically calls a library; a framework often controls part of the lifecycle and invokes application code through extension points.
+- Inversion of Control (IoC): control over some object creation and application flow is delegated to a framework/container.
+- Spring Framework provides infrastructure for Java applications, including an IoC container / application context, dependency injection, web MVC, transaction management, and integrations.
+- Dependency Injection (DI): a class receives its dependencies from outside rather than constructing them itself.
+- Barista example: `JobService` depends on `JobRepository`; manual constructor injection is ordinary Java and Spring can later manage supplying the dependency.
+
+**Understanding status**
+- These concepts have been explained with an initial conceptual example.
+- No Spring code has been generated or run.
+- No independent teach-back or exercise has been completed yet.
+- Do not mark IoC or DI as demonstrated/mastered.
+
+**Next topics**
+- Clarify Spring Framework vs Spring Boot.
+- Explain starters, conditional auto-configuration, embedded servers, and the simplified application startup lifecycle.
+- Explain why the Barista API process will use a web server while a worker process may be a non-web application.
+- Then check understanding with a small design exercise before generating the Spring Boot project.
+
