@@ -371,3 +371,20 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Next step**
 - Generate the initial Spring Boot Maven project for Barista, inspect the generated POM, and explain the parent, properties, dependencies, and plugins in context.
 
+### 2026-11-09 — Learning adjustment: keep POM lessons incremental
+
+**Learner feedback**
+- The detailed walkthrough of the generated pom.xml was too information-dense.
+- Learner prefers to defer detailed POM study until the relevant pieces are needed.
+
+**Teaching adjustment**
+- Do not explain every generated file or POM section in one lesson.
+- Introduce only the minimum concept needed for the next practical action, then return to details when they become relevant.
+- Current takeaway only: pom.xml tells Maven about the project, its dependencies, and build configuration.
+- Do not treat the POM lesson as mastered. Revisit parent, properties, dependencies, scopes, and plugins incrementally during actual project work.
+
+**Next step**
+- Stop the dependency-tree exploration for now.
+- Run a simple Maven build using the project wrapper, inspect the result, then start the generated Spring Boot application.
+- Explain only what each command does as it is needed.
+
