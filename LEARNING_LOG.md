@@ -297,3 +297,28 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Next step**
 - Continue Spring fundamentals one concept at a time. Revisit dependency injection with a small plain-Java example before discussing Spring annotations or the application context.
 
+### 2026-11-09 — Architecture lesson: Modular monolith vs microservices
+
+**Topics introduced**
+- A modular monolith organizes one logical application into cohesive modules with explicit boundaries.
+- A traditional modular monolith is generally built and deployed as one application unit; its modules commonly interact through in-process interfaces/method calls.
+- Microservices are independently deployable services organized around focused capabilities, typically communicating through network APIs or messaging.
+- Microservices require additional distributed-systems work: network failures, timeouts, retries, observability across services, data consistency, deployment coordination, and service-to-service security.
+- Service-owned data is an important microservices principle: other services should normally access a service's data through its contracts rather than directly modifying its tables.
+- A separate process does not automatically make a component a microservice. Deployment autonomy, ownership boundaries, data ownership, and communication contracts matter.
+- Barista may have a shared Java codebase and modular domain while running API and worker roles as separate process types. Describe this precisely as a modular application with separate runtime roles; do not call every process a microservice.
+
+**Current recommendation**
+- Start Barista as a modular monolith/shared codebase with explicit module boundaries.
+- Use PostgreSQL as the initial source of truth.
+- Run worker processes separately when necessary for execution and scaling, without prematurely splitting the product into independently owned microservices.
+- Reconsider microservices only when actual requirements justify independent deployment, scaling, ownership, or fault isolation.
+
+**Understanding status**
+- Difference between modular monolith and microservices has been explained using Barista examples.
+- Learner has not yet completed a teach-back or design exercise; do not mark as mastered.
+
+**Next step**
+- Ask learner to explain the main distinction in their own words or apply it to an API/worker deployment scenario.
+- Then continue the current Spring learning path in smaller concept units; do not jump ahead into service decomposition.
+
