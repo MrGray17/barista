@@ -388,3 +388,34 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Run a simple Maven build using the project wrapper, inspect the result, then start the generated Spring Boot application.
 - Explain only what each command does as it is needed.
 
+
+
+### 2026-11-09 — Learning checkpoint: first Spring Boot build
+
+**Project setup**
+- Learner generated the initial Spring Boot project locally using Spring Initializr.
+- Project configuration: Maven, Java 21, Spring Boot 4.1.2, JAR packaging, package/group `com.barista`, and Spring MVC web dependency.
+- The generated project is in the intended local `barista/` project root (not nested in another `barista/` directory).
+
+**Concepts introduced**
+- Maven Wrapper downloads/uses the project's configured Maven distribution when needed.
+- On the first build, Maven may download project dependencies, transitive dependencies, and build plugins; artifacts are cached in the local Maven repository (normally `~/.m2/repository`) for reuse.
+- `clean` removes generated build output, and `package` runs the preceding lifecycle phases needed to compile, test, and package the project.
+- Java compilation produces `.class` bytecode. Packaging does not merge all classes into one bytecode file: a JAR is an archive containing application classes, resources, and (for an executable Spring Boot JAR) packaged dependency JARs.
+- The JVM still executes bytecode. With `java -jar`, the executable Spring Boot JAR's launcher helps load the application and its packaged dependencies. The class loader loads classes as needed; it does not necessarily load every class all at once.
+
+**Attempt and verification**
+- Learner ran the Maven Wrapper build command (`clean package`) from the project root.
+- Learner reported the build completed successfully with `BUILD SUCCESS` and a `target/` directory was present.
+- The first build downloaded dependencies and build tooling.
+- This verifies that the generated project can be built locally. It does not yet verify that the application starts or handles HTTP requests.
+
+**Understanding status**
+- Learner connected JAR packaging to the bytecode/JVM model and described the JAR as grouping class files for the JVM.
+- Refined model: the JAR is a container/archive, not a funnel that sends every class to the JVM simultaneously. The JVM's class-loading mechanism loads required classes as the application needs them.
+- Treat JAR packaging as introduced and initially understood; reinforce through actually running the JAR rather than marking it fully mastered.
+
+**Next step**
+- Run the generated executable JAR with the Java launcher.
+- Confirm the Spring Boot application starts, identify the embedded server startup log, and understand what is listening on the configured HTTP port.
+- No Barista job-queue functionality has been implemented yet.
