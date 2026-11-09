@@ -419,3 +419,28 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Run the generated executable JAR with the Java launcher.
 - Confirm the Spring Boot application starts, identify the embedded server startup log, and understand what is listening on the configured HTTP port.
 - No Barista job-queue functionality has been implemented yet.
+
+
+### 2026-11-09 — Runtime checkpoint: first successful Spring Boot startup
+
+**Attempt and verification**
+- Learner executed the generated executable JAR using `java -jar target/barista-0.0.1-SNAPSHOT.jar`.
+- Learner reported that the application started and the terminal indicates it is listening.
+- This is the first successful runtime startup of the generated Barista Spring Boot application.
+- The process remains attached to the terminal while the server runs; this is expected.
+
+**Concepts introduced**
+- Building/package creation and application execution are distinct operations: Maven's `clean package` lifecycle creates the JAR; `java -jar` launches the packaged application in the JVM.
+- Spring Boot starts the embedded Tomcat server for this Spring MVC web application.
+- A server listening on port 8080 is ready to receive HTTP requests. This does not imply that application routes/endpoints have been implemented.
+- Requesting `http://localhost:8080/` may return 404 because no controller route has been created yet; this would not, by itself, mean the server failed to start.
+
+**Understanding status**
+- Learner asked for clarification about the distinction between building and running. It was explained with a two-step flow, but no independent teach-back was recorded.
+- Successful startup verifies the runtime path, not yet the learner's independent understanding of Maven/JAR/JVM responsibilities.
+- Do not mark Spring Boot internals, HTTP routing, or dependency injection as mastered.
+
+**Next step**
+- Send an HTTP request to `http://localhost:8080/` in a browser and inspect the response.
+- Use the result to distinguish "server is running and received the request" from "an application endpoint exists and handled the request."
+- Then introduce the smallest controller/endpoint so Barista can return a deliberate response.
