@@ -351,3 +351,23 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Review the proposed architecture in plain language, confirm understanding, and refine it if needed.
 - Then return to Spring fundamentals at a slower pace before generating the first Spring Boot application.
 
+### 2026-11-09 — Maven checkpoint: dependencies vs build plugins
+
+**Learner response**
+- Correctly selected `<dependencies>` for the PostgreSQL JDBC driver.
+- Reason given: it provides functionality used by application code, rather than being a build plugin.
+
+**Clarification**
+- A dependency is a library/framework artifact made available on the project's compile and/or runtime classpath.
+- A plugin is tooling Maven invokes as part of the build lifecycle or another Maven goal (for example, compiler, test, or Spring Boot Maven plugins).
+- Avoid defining the distinction as "dependencies are not for compilation": many dependencies are required to compile source code, while others (such as the PostgreSQL JDBC driver in a typical Spring Boot setup) are needed at runtime.
+- The key distinction is application functionality/classpath vs build-process functionality.
+
+**Understanding status**
+- Basic purpose of Maven and why imports alone do not download external libraries: explained.
+- Dependencies vs plugins: learner selected the correct section and gave the core distinction; the compile/runtime nuance has now been clarified.
+- Maven's real generated POM has not yet been inspected.
+
+**Next step**
+- Generate the initial Spring Boot Maven project for Barista, inspect the generated POM, and explain the parent, properties, dependencies, and plugins in context.
+
