@@ -322,3 +322,32 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Ask learner to explain the main distinction in their own words or apply it to an API/worker deployment scenario.
 - Then continue the current Spring learning path in smaller concept units; do not jump ahead into service decomposition.
 
+### 2026-11-09 — Architecture proposal: initial Barista structure
+
+**Proposed architecture (not yet marked as learner-approved)**
+- One repository and initially one Maven project, organized by feature/module.
+- A pragmatic layered flow inside features: inbound adapters/controllers → application use cases/services → domain rules.
+- Use ports/interfaces and infrastructure adapters at meaningful boundaries, especially persistence. Keep the dependency direction inward.
+- API and worker are separate runtime roles/processes that share code where appropriate; multiple worker processes can scale independently.
+- PostgreSQL is the initial durable source of truth and coordination mechanism.
+- job_events is initially an append-only audit history, not an event bus or event-sourced architecture.
+
+**Approaches deliberately deferred**
+- Microservices: operational and network complexity is not justified yet.
+- Full Clean/Hexagonal ceremony: adopt dependency boundaries, but avoid unnecessary abstraction.
+- Event-driven coordination for everything: use direct calls within modules and PostgreSQL coordination initially; add events when there is a real use case.
+- Full CQRS with separate read/write stores: ordinary PostgreSQL queries are sufficient initially.
+- Kafka/Redis/RabbitMQ: evaluate only after a measured need.
+
+**Important nuance**
+- Separate API and worker processes do not automatically make the system microservices. The important questions are independent ownership, deployment boundaries, data ownership, and communication contracts.
+- A modular codebase with separate runtime roles is the intended starting point.
+
+**Architecture decision record**
+- Proposed details: docs/adr/0001-initial-architecture.md
+- Status: Proposed; learner should understand and challenge the trade-offs before treating it as an accepted project decision.
+
+**Next learning step**
+- Review the proposed architecture in plain language, confirm understanding, and refine it if needed.
+- Then return to Spring fundamentals at a slower pace before generating the first Spring Boot application.
+
