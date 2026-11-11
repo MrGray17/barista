@@ -444,3 +444,39 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Send an HTTP request to `http://localhost:8080/` in a browser and inspect the response.
 - Use the result to distinguish "server is running and received the request" from "an application endpoint exists and handled the request."
 - Then introduce the smallest controller/endpoint so Barista can return a deliberate response.
+
+
+### 2026-11-11 — Learning checkpoint: Java packages, Spring annotations, and editor diagnosis
+
+**Package concepts introduced**
+- Java package declarations identify a class's logical namespace.
+- In the conventional Java source layout, the package name mirrors the directory path under the source root. For example, `src/main/java/com/barista/controller/JobController.java` declares `package com.barista.controller;`.
+- `src/main/java` is the source root and is not part of the package name.
+- Packages provide organization, qualified class names/namespaces, and package-level access boundaries; they are more than a simple folder-tracking mechanism.
+- VS Code commonly generates a package declaration based on the file's path.
+
+**Spring annotations introduced**
+- An annotation, written with `@`, is structured metadata attached to a Java element. It is not an ordinary comment and is not itself a method call.
+- Comments are primarily for human readers; a framework/tool can inspect and process annotations.
+- `@RestController` tells Spring to treat the annotated class as a REST web controller. Spring performs the framework behavior; the annotation is the declaration Spring recognizes.
+- Annotations are not the only possible way to configure a framework. An explicit route-registration API could map an HTTP method and path to a handler method. Spring annotations provide a declarative alternative.
+- `@GetMapping("/hello")` was introduced conceptually as a way to associate an HTTP GET path with a controller method. The learner's question about what happens when this annotation is removed remains an open teach-back point.
+
+**Editor issue and diagnosis**
+- After adding the `RestController` import/annotation to `HelloController.java`, VS Code showed unresolved import/type diagnostics.
+- Learner ran `./mvnw compile`; Maven returned `BUILD SUCCESS`, demonstrating that Maven could resolve Spring's class and compile the controller source at that point.
+- The likely issue was stale VS Code Java language-server/Maven project state, rather than a missing Spring dependency. A Java project reload was attempted, but it was reported as unusually slow; whether the diagnostics cleared was not confirmed.
+- Do not overstate the diagnosis as certain until editor state is rechecked.
+
+**Implementation and verification status**
+- Learner created `HelloController.java` in `src/main/java/com/barista/`.
+- The attempted class uses package `com.barista`, imports `org.springframework.web.bind.annotation.RestController`, and is being annotated with `@RestController`.
+- Maven compilation succeeded after that code was added.
+- No `@GetMapping` endpoint has yet been implemented or tested.
+- Important runtime/build nuance: the executable JAR that was started was packaged before `HelloController` was added. Running `./mvnw compile` later updates compiled classes under `target/classes`, but does not rebuild the executable JAR. To test the new controller using `java -jar`, run `./mvnw package` (or `./mvnw clean package`), stop the old running process, and start the newly packaged JAR.
+
+**Open questions / next step**
+- Confirm whether VS Code finished reloading and whether the red diagnostics disappeared. Maven compilation is currently the stronger verification of source/dependency correctness.
+- Complete the mental model: if `@GetMapping` is removed, how would Spring know which URL should invoke the method? Explain explicit route registration versus annotation-based mapping.
+- Then add the first deliberate endpoint and rebuild/restart the JAR before testing it in the browser.
+- Keep the lesson incremental: explain one annotation at a time and require the learner to predict its effect before advancing.
