@@ -610,3 +610,24 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Teaching rule going forward**
 - End meaningful concept/implementation units with an interviewer-style understanding challenge.
 - If the learner says they do not know, teach the answer without judgment, then check understanding with a nearby variation before advancing.
+
+
+### 2026-11-11 — Teaching calibration: scaffold difficulty more carefully
+
+**Learner feedback**
+- Interviewer-style questions are motivating, but recent questions about Spring testing and application-context behavior felt too difficult and assumed senior-level reasoning.
+- The learner is new to Spring and backend framework concepts; do not confuse ambition with prior expertise.
+
+**Teaching adjustment**
+- Preserve the learner's preference for challenging, interviewer-like questions, but scaffold them progressively:
+  1. Basic recognition/recall.
+  2. Explain a concept in their own words.
+  3. Apply it to a concrete Barista scenario.
+  4. Introduce a tricky edge case or interview-style twist only after the prerequisite concepts are secure.
+- Ask one focused question at a time.
+- When the learner says they do not know or signals overload, explain the answer plainly, reduce abstraction, and use a simpler nearby check before increasing difficulty.
+- Avoid stacking several new Spring internals in one explanation. Clearly distinguish what must be understood now from what can wait.
+- Maintain high standards without making the learner feel expected to perform like a senior engineer.
+
+**Immediate clarification**
+- For the previous `contextLoads()` question: changing `@GetMapping("/hello")` to another valid path such as `/wrong-path` would normally NOT make the context-load test fail. Spring can initialize successfully while registering the endpoint under the wrong path. A dedicated HTTP/API test is needed to detect that the expected `/hello` route is missing.
