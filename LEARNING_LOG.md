@@ -540,3 +540,28 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Since `clean package` was run, stop any older Barista process and launch the newly packaged JAR.
 - Request `http://localhost:8080/hello` and verify the response body is `Barista is alive` (expected successful HTTP response).
 - Do not mark the endpoint implemented-and-verified until the live request succeeds.
+
+
+### 2026-11-11 — Executable JAR inspection: route and response verified
+
+**Investigation**
+- Learner listed the executable Spring Boot JAR contents with `jar tf target/barista-0.0.1-SNAPSHOT.jar | grep HelloController`.
+- Confirmed the class is stored at `BOOT-INF/classes/com/barista/HelloController.class`, which explains why `javap -classpath <boot-jar> com.barista.HelloController` did not find it: the class is nested under Spring Boot's executable-JAR layout.
+- Learner extracted the class with `jar xf` and inspected the extracted class using `javap -v -p`.
+
+**Verified evidence from the packaged artifact**
+- `RuntimeVisibleAnnotations` reports `GetMapping(value=["/hello"])`.
+- Bytecode loads the string constant `"Barista is alive"` and returns it.
+- `RestController` is also present as a runtime-visible annotation.
+- This confirms the executable JAR contains the intended route and response. The FernFlower output showing `"path"` was stale or from a different class/view and is not authoritative for this artifact.
+
+**Learning demonstrated**
+- Learner successfully used `jar tf` to inspect a JAR's entries, `jar xf` to extract a nested class, and `javap -v` to inspect class-file metadata and bytecode.
+- Learned that Spring Boot executable JARs place application classes under `BOOT-INF/classes` and dependencies under `BOOT-INF/lib`; they are not laid out like a plain JAR at the archive root.
+- Learned to distinguish source files, compiled class-directory output, and the packaged executable JAR.
+
+**Next step**
+- Learner's terminal is currently in `target/jar-inspection`. Return to the project root using `cd ../..`.
+- Ensure any old Barista process is stopped, then launch the verified JAR with `java -jar target/barista-0.0.1-SNAPSHOT.jar`.
+- Test `http://localhost:8080/hello` and verify the response body is `Barista is alive`.
+- The endpoint is compiled and packaged correctly, but end-to-end HTTP behavior is not yet verified.
