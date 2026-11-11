@@ -2,7 +2,7 @@
 
 > A living record of the learning journey and engineering progress behind Barista.
 >
-> **Last updated:** 2026-11-08
+> **Last updated:** 2026-11-11
 
 ## Why this file exists
 
@@ -480,3 +480,40 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Complete the mental model: if `@GetMapping` is removed, how would Spring know which URL should invoke the method? Explain explicit route registration versus annotation-based mapping.
 - Then add the first deliberate endpoint and rebuild/restart the JAR before testing it in the browser.
 - Keep the lesson incremental: explain one annotation at a time and require the learner to predict its effect before advancing.
+
+
+### 2026-11-11 — Assessment: first web-runtime concepts and next implementation target
+
+**Additional concepts introduced**
+- Spring Web MVC is the web framework that handles servlet-based HTTP request routing and response handling. MVC expands to Model-View-Controller; Barista's REST API will primarily return data (for example JSON), not server-rendered HTML views.
+- Spring MVC's `DispatcherServlet` acts as a front controller: it receives web requests and coordinates mapping them to handler methods.
+- Spring Boot builds on Spring Framework and, with the Spring MVC starter on the classpath, auto-configures a servlet web application and an embedded Tomcat server by default.
+- Tomcat accepts HTTP connections; Spring MVC dispatches/routes requests; Spring Boot configures and starts the infrastructure. These are related but distinct responsibilities.
+- The default embedded server port is 8080 and can be changed with `server.port` in `application.properties`.
+- `SNAPSHOT` identifies a development version of a Maven artifact; it is not the Spring Boot framework version. Maven artifact coordinates are `groupId:artifactId:version`.
+- The `groupId`/package prefix `com.barista` follows the reverse-domain naming convention. Owning a website/domain is not required for this project; the prefix is a namespace convention.
+- A package's source-folder layout follows the package name beneath the source root. Spring Boot's default component scan begins at the package of the main application class and includes its subpackages, so placing controllers under `com.barista` makes them discoverable by default.
+- Java import statements let source code refer to a type by its simple name instead of repeatedly writing its fully qualified name. The IDE can insert imports via autocomplete/quick fixes; memorizing every library import path is unnecessary.
+
+**Understanding status**
+- Learner now accepts that `com.barista` is a conventional Java namespace, not a requirement to publish a website or own a domain.
+- Packages, Maven coordinates/artifacts, JAR files, imports, Spring MVC, DispatcherServlet, auto-configuration, embedded Tomcat, and component scanning have been explained. These are introductions, not yet independently demonstrated mastery.
+- The learner correctly questioned why Spring annotations are needed and understood that annotation-based route declaration is an alternative to explicit route registration. The precise consequence of removing `@GetMapping` remains an open check.
+- No HTTP controller endpoint has been implemented or verified yet.
+
+**Current milestone assessment**
+- Local project setup and Maven compilation have been verified by the learner.
+- Spring Boot's embedded server was successfully started locally and responded to a browser request with HTTP 404 at `/`, confirming a reachable server with no matching application route.
+- `HelloController.java` exists locally and its `@RestController` annotation compiled successfully with Maven.
+- The initial executable JAR was built before `HelloController` was added; the later `mvn compile` did not rebuild that JAR.
+- A check of the GitHub default branch found the learning log and architecture ADR, but did not find `pom.xml` or the Java source paths. Treat the local codebase and remote repository contents as potentially out of sync; this is not a blocker for the next local exercise, and Git workflow is handled separately.
+
+**Next implementation milestone: first HTTP endpoint**
+1. Add `@GetMapping("/hello")` to a method in `HelloController` that returns a simple string.
+2. Explain what HTTP GET and route-to-method mapping mean before running it.
+3. Rebuild the executable JAR (for example, `./mvnw clean package`), stop the older running process, and run the newly built JAR.
+4. Request `http://localhost:8080/hello` and verify the deliberate response (expected HTTP 200 and the returned text).
+5. Use the trace to reinforce Tomcat → DispatcherServlet → mapped controller method → HTTP response.
+
+**Teaching constraint**
+- Keep the next lesson to one concept and one small implementation at a time. Do not introduce database, job domain, persistence, or worker architecture until the first endpoint works and the request/response path is understood.
