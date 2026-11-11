@@ -517,3 +517,26 @@ Update this file at those checkpoints. Keep the main progress record concise and
 
 **Teaching constraint**
 - Keep the next lesson to one concept and one small implementation at a time. Do not introduce database, job domain, persistence, or worker architecture until the first endpoint works and the request/response path is understood.
+
+
+### 2026-11-11 — Bytecode inspection: compiled endpoint verified
+
+**Learner action**
+- After seeing FernFlower display `@GetMapping({"path"})`, learner checked the original `HelloController.java`, which contained `@GetMapping("/hello")`.
+- Learner ran `javap -v -p -classpath target/classes com.barista.HelloController` from the project root.
+
+**Verified evidence**
+- `javap` inspected `target/classes/com/barista/HelloController.class`.
+- The `RuntimeVisibleAnnotations` section reports `GetMapping(value=["/hello"])`.
+- The method bytecode loads the constant `"Barista is alive"` and returns it (`ldc`, `areturn`).
+- The class metadata identifies `HelloController.java` as the source filename.
+- This proves the compiled class under `target/classes` has the intended route and response. The earlier FernFlower display showing `"path"` was stale or came from a different class/view; it did not reflect this compiled class.
+
+**Learning demonstrated**
+- Learner used the JDK's `javap` tool to inspect a compiled class and provide direct evidence about its annotation value.
+- Reinforce that decompilers reconstruct readable Java-like source, while `javap -v` exposes class-file metadata and bytecode information.
+
+**Next step**
+- Since `clean package` was run, stop any older Barista process and launch the newly packaged JAR.
+- Request `http://localhost:8080/hello` and verify the response body is `Barista is alive` (expected successful HTTP response).
+- Do not mark the endpoint implemented-and-verified until the live request succeeds.
