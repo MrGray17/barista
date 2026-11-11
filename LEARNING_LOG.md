@@ -565,3 +565,28 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Ensure any old Barista process is stopped, then launch the verified JAR with `java -jar target/barista-0.0.1-SNAPSHOT.jar`.
 - Test `http://localhost:8080/hello` and verify the response body is `Barista is alive`.
 - The endpoint is compiled and packaged correctly, but end-to-end HTTP behavior is not yet verified.
+
+
+### 2026-11-11 — Milestone: first HTTP endpoint works end-to-end
+
+**Implementation**
+- `HelloController` is annotated with `@RestController`.
+- Its `hello()` method is mapped with `@GetMapping("/hello")` and returns `"Barista is alive"`.
+- The executable JAR was rebuilt after the controller was added.
+
+**Verification**
+- Learner launched the rebuilt executable Spring Boot JAR.
+- Learner visited `http://localhost:8080/hello` and confirmed that it works and returns the intended text.
+- This verifies the complete basic request path: browser/client → embedded Tomcat → Spring MVC request mapping → controller method → HTTP response.
+- This is the first end-to-end HTTP endpoint verified in Barista.
+
+**Concepts now demonstrated through implementation**
+- Spring Boot can launch the embedded web server.
+- Spring MVC can route a GET request to a controller method through `@GetMapping`.
+- `@RestController` registers the controller for web handling and a returned string is written as response content.
+- A successful Maven package is not sufficient by itself; the packaged application must also be run and its behavior tested.
+
+**Next step**
+- Consolidate HTTP endpoint fundamentals: request method, path, status code, response body, and the distinction between route matching and method execution.
+- Then introduce request mapping for a small second endpoint or a path variable, with a learner prediction before coding.
+- After the learner can explain and implement a simple route independently, move toward the first real Barista use case: defining what a job is and designing the job submission API.
