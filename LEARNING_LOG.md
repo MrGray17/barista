@@ -590,3 +590,23 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Consolidate HTTP endpoint fundamentals: request method, path, status code, response body, and the distinction between route matching and method execution.
 - Then introduce request mapping for a small second endpoint or a path variable, with a learner prediction before coding.
 - After the learner can explain and implement a simple route independently, move toward the first real Barista use case: defining what a job is and designing the job submission API.
+
+
+### 2026-11-11 — Teaching preference: interviewer-style understanding challenges
+
+**Learner preference**
+- Learner explicitly enjoys tricky, interviewer-like questions that challenge whether they genuinely understand a concept rather than merely recognize syntax or repeat an explanation.
+- Incorporate regular conceptual questions, scenario-based questions, debugging hypotheses, trade-off questions, and "what would happen if..." variations throughout Barista lessons.
+- Do not make every question a multiple-choice question. Prefer questions that require reasoning and explanation, with one focused question at a time.
+- Let the learner attempt first; when they do not know, explain the reasoning clearly and then give a closely related follow-up to check retention.
+- Keep questions fair and grounded in concepts already introduced. Increase difficulty progressively.
+- The goal is independent engineering judgment, not tricking or embarrassing the learner.
+
+**Example distinction reinforced**
+- A successful Maven build verifies that configured build phases completed: compilation, configured tests, and packaging. It does not alone prove that the application can start or that an HTTP route works.
+- A successful request to `/hello` verifies one runtime path through application startup, embedded Tomcat, Spring MVC route mapping, controller invocation, and HTTP response generation.
+- A single successful endpoint request is a focused end-to-end integration check, not proof that the entire application is correct.
+
+**Teaching rule going forward**
+- End meaningful concept/implementation units with an interviewer-style understanding challenge.
+- If the learner says they do not know, teach the answer without judgment, then check understanding with a nearby variation before advancing.
