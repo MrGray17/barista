@@ -780,3 +780,32 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Teaching approach**
 - Continue simple, patient, analogy-led explanations with one central concept per lesson.
 - Progressively use interviewer-style challenges, but scaffold them from basic understanding to applied reasoning and then harder edge cases.
+
+
+### 2026-11-12 — Proposed job identifier strategy: UUIDv4
+
+**Learner preference and recommendation**
+- Learner prefers UUID-style identifiers for Barista jobs.
+- Recommended starting choice: UUIDv4 generated in Java 21 with `java.util.UUID.randomUUID()`, stored as PostgreSQL's native `uuid` type and constrained as the primary key.
+- This is a proposed design choice for the first implementation; revisit it if requirements or measured database performance justify UUIDv7 or another identifier strategy.
+
+**Rationale**
+- Multiple API instances can generate IDs independently without coordinating through a central sequence allocator.
+- Java 21's standard `UUID.randomUUID()` produces a type-4 pseudorandom UUID and requires no extra dependency.
+- PostgreSQL supports a native UUID column type and a primary-key uniqueness constraint.
+- UUIDv4 uses 128 bits (16 bytes), so it is larger than a BIGINT (8 bytes); random key insertion may have less favorable B-tree index locality than sequential or time-ordered identifiers.
+- UUIDv7 is time-ordered and may offer better index locality, but its timestamp component reveals approximate generation time. Java 21's standard UUID API does not provide a UUIDv7 factory, so it would require another implementation/library or database-side generation.
+- Avoid premature optimization: start with UUIDv4 and revisit UUIDv7 only with a concrete requirement or benchmark.
+
+**Intended data model**
+- Use one canonical job identifier, e.g. a Java `UUID` and PostgreSQL `uuid` primary key. Do not add a second numeric internal ID unless a real requirement emerges.
+- Related rows such as `job_events` should reference the job using a UUID foreign key (e.g. `job_id`).
+- UUID uniqueness is not the same as idempotency. Two identical submissions should normally create two distinct jobs unless a separate idempotency mechanism/key is deliberately implemented later.
+- UUIDs are not an authorization mechanism; API access to a job must still be authorized.
+
+**Understanding status**
+- Learner discussed sequential database IDs versus UUIDs, central sequence allocation, and the relevance of prior Redis Lua atomicity experience.
+- UUIDv4 vs UUIDv7 trade-offs have now been introduced. Do not mark the choice or concepts as independently demonstrated until reinforced during Job implementation.
+
+**Next step**
+- Begin the actual `Job` domain model. First decide the minimum job data and lifecycle needed by Barista; then implement a simple Java representation using a UUID identifier. Persistence and PostgreSQL schema come later.
