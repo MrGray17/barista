@@ -879,3 +879,32 @@ Update this file at those checkpoints. Keep the main progress record concise and
 
 **Next step**
 - Continue designing the minimal public request/response schemas and minimal Job domain model before writing code.
+
+
+### 2026-11-12 — Future reliability design: resumable jobs and worker crash recovery
+
+**Design direction recorded for a later stage (not implemented)**
+
+- Initial execution policy: when a worker crashes during a job, Barista will recover and make the job eligible for another attempt. The next attempt starts the handler from the beginning.
+- Future extension: support resumable handlers through application-owned checkpoints. A handler that can safely resume must periodically persist enough progress in durable storage for a later worker to continue from a known checkpoint.
+- Barista's generic queue should provide the execution/recovery mechanism, but it cannot infer what "60% complete" or "continue at item 61" means for every job type. The handler understands the task's semantics and must define how progress is saved and restored.
+- Keep two concepts separate:
+  - `attempts`: how many execution attempts have started; used with a retry limit to decide whether another attempt is allowed.
+  - **Checkpoint/progress state**: durable task-specific information that a handler can use to resume work.
+- Do not promise exactly-once effects or automatic continuation from the crash point. Retrying from the beginning can repeat side effects, so handlers must eventually be designed for idempotency or use checkpoints/other coordination where appropriate.
+- This is a future capability, not part of the first Job model or initial implementation. Revisit after basic job execution, persistence, retries, and crash recovery are understood and working.
+
+**Concepts introduced**
+- A process crash normally destroys its in-memory execution state: local variables, stack, and unsaved progress are not available to a replacement worker.
+- A crash can occur because of an unhandled exception, process termination/restart, machine or container failure, operating-system resource pressure (such as out-of-memory termination), power/network/host failure, or a forced deployment/shutdown.
+- Distinguish a job failure from a worker/process crash: a handler can fail normally and report an error while the worker remains alive; a process crash can prevent Barista from receiving a final success/failure report at all.
+- Barista will need a way to detect work that was claimed but not completed (later, leases/heartbeats and recovery). Do not design those mechanisms before the basic lifecycle is understood.
+
+**Understanding status**
+- The difference between an attempt counter and a checkpoint has been introduced.
+- The learner asked whether a worker should continue from the point of a crash. Explained restart-from-beginning as the initial strategy and handler-owned durable checkpoints as a later extension.
+- No independent teach-back, implementation, or verification yet.
+
+**Next learning step**
+- Understand common causes and observable effects of worker failure.
+- Then continue the Job model, including the attempt counter and retry limit, without adding checkpoint fields to the first implementation.
