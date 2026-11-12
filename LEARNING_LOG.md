@@ -631,3 +631,41 @@ Update this file at those checkpoints. Keep the main progress record concise and
 
 **Immediate clarification**
 - For the previous `contextLoads()` question: changing `@GetMapping("/hello")` to another valid path such as `/wrong-path` would normally NOT make the context-load test fail. Spring can initialize successfully while registering the endpoint under the wrong path. A dedicated HTTP/API test is needed to detect that the expected `/hello` route is missing.
+
+
+### 2026-11-12 — Progress reassessment and next milestone
+
+**Verified implementation**
+- The local Spring Boot 4 / Java 21 project has been generated and built with Maven.
+- The executable JAR starts the application and embedded Tomcat on port 8080.
+- `HelloController` exposes `GET /hello` and returns `Barista is alive`.
+- Learner confirmed the endpoint works in the browser.
+- Learner inspected both `target/classes/com/barista/HelloController.class` and the class extracted from `BOOT-INF/classes` in the executable JAR using `javap`; both show `GetMapping(value=["/hello"])` and the expected response string.
+- This confirms one working end-to-end HTTP path, not full application correctness.
+
+**Current conceptual status**
+- Maven build/package, JAR execution, packages/imports, annotations, Spring MVC, embedded Tomcat, routes and HTTP methods have been introduced.
+- Java packages/imports and the source → bytecode → JAR → JVM flow have good initial understanding.
+- Spring application context and the generated `contextLoads()` test have been explained, but the learner has not yet inspected the exact generated test file or demonstrated independent understanding.
+- Controller/service/repository separation has been introduced through a job-submission example, but no such layers have been implemented.
+- Continue to distinguish explained concepts from independently demonstrated knowledge.
+
+**Not implemented**
+- No Job model, job lifecycle, job-submission API, database integration, worker loop, or queue coordination exists yet.
+- The initial architecture ADR remains Proposed.
+
+**Next milestone: automated test for GET /hello**
+1. Inspect the actual generated test source under `src/test/java`; do not assume its contents.
+2. Explain the minimum JUnit concepts needed: a test method, arranging a request, performing it, and asserting the expected status/body.
+3. Add a focused automated HTTP/controller test for `GET /hello`.
+4. Run it with Maven and inspect what a passing and failing assertion mean.
+5. Explain the difference between the context-load test and a test that exercises the HTTP route.
+6. After this is understood, introduce a small realistic Barista use case and design the Job model before adding persistence.
+
+**Teaching approach**
+- Keep explanations short and sequential.
+- Continue interviewer-style challenges, but scaffold them from basic understanding to application and only then to tricky edge cases.
+- Ask one question at a time; when the learner is stuck, teach the concept plainly and follow with a nearby, easier check.
+
+**Repository synchronization note**
+- The latest check of the GitHub default branch found the learning log and architecture ADR, but not `pom.xml` or the local Java source paths. The locally working project is the current implementation state; remote source synchronization is separate from this learning milestone and Git instruction remains outside this track.
