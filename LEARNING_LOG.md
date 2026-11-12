@@ -833,3 +833,32 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Teaching clarification**
 - When explaining horizontal scaling, distinguish adding concurrent threads/resources to one process, running additional processes on the same host, and distributing replicas across multiple machines.
 - Do not describe UUIDs as necessary for multiple API instances or imply multiple instances are required for concurrency.
+
+
+### 2026-11-12 — Next product slice: public job-submission contract
+
+**Design insight**
+- Learner identified that Barista needs a language-independent, standardized public API contract so applications written in different languages can submit and inspect jobs without knowing Barista's Java/Spring internals.
+- Keep the distinction clear between the public HTTP/JSON contract and internal Java domain classes/interfaces.
+- Public contract should specify method, path, request schema, server-owned fields, success status/response, validation, and error response behavior. OpenAPI can document this contract later.
+
+**Proposed first use case (not yet implemented or formally accepted)**
+- Operation: submit a job.
+- HTTP method and path: `POST /api/v1/jobs`.
+- Request contains client-provided job data such as `type` and `payload`.
+- Barista generates the job identifier (provisionally UUIDv4) and assigns the initial status `PENDING`; clients should not choose these server-managed fields.
+- A successful asynchronous acceptance can return HTTP `202 Accepted` with the generated job ID, type, and status. Explain that 202 means accepted for processing, not completed.
+- Payload is JSON and may differ by job type; validate it according to the selected type. Keep the initial contract minimal and evolve it deliberately.
+- Do not expose internal persistence/entity representations as the public contract.
+
+**Implementation path**
+1. Agree on the single submit-job contract and distinguish client-owned from server-owned fields.
+2. Design the minimal Job domain model and lifecycle.
+3. Implement and unit-test domain rules.
+4. Add application use case/service and HTTP DTO/controller mapping.
+5. Add PostgreSQL persistence before claiming durable acceptance; then write HTTP integration tests.
+6. Add worker execution only after the submit/read/persist flow is understood and verified.
+
+**Teaching note**
+- Do not start by designing dozens of endpoints. Build and verify one vertical slice first.
+- Explain one concept at a time, with a concrete request/response example.
