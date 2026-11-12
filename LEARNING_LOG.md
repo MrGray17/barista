@@ -738,3 +738,45 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Immediate focus**
 - Finish the first automated HTTP test for `GET /hello` using a clear, beginner-friendly explanation.
 - Then begin Barista's first real domain feature: define a job, its data, and its valid lifecycle before building the job-submission API.
+
+
+### 2026-11-12 — Milestone: first automated HTTP endpoint test passes
+
+**Implementation**
+- Added `@AutoConfigureMockMvc` alongside `@SpringBootTest`.
+- Injected a configured `MockMvc` instance with `@Autowired`.
+- Added a JUnit test that performs `GET /hello` and asserts HTTP 200 plus the exact response body `Barista is alive`.
+- Added the necessary static imports for MockMvc's `get`, `status`, and `content` request/matcher helpers.
+
+**Debugging and verification**
+- Initial test run failed because the final chained assertion statement was missing a semicolon.
+- Learner corrected the syntax and ran `./mvnw clean test`.
+- Learner reported that the tests now pass.
+- The two test methods are the context-load smoke test and the endpoint response test.
+- `clean test` compiles application and test code and runs tests; it creates compiled classes and Surefire reports under `target/`, but does not run the package phase to create a new executable JAR.
+- `clean package` proceeds through the test phase and then packages the executable JAR.
+
+**Concepts introduced / reinforced**
+- MockMvc simulates HTTP requests through Spring MVC without a real network connection or starting Tomcat.
+- JUnit `@Test` marks a test method for execution.
+- Assertions express expected behavior; a failing assertion means observed behavior differs from the expectation.
+- Static imports allow static methods such as `get()`, `status()`, and `content()` to be called without qualifying them with their declaring class.
+- Distinguish test failures (an assertion is false) from test errors (unexpected execution/setup problems).
+- A successful build/test run only proves the checks that were actually configured and executed.
+
+**Learning demonstrated**
+- Learner recognized the conceptual similarity between MockMvc assertions and Node.js `assert.equal`.
+- Learner fixed a missing statement-terminating semicolon after reading the compiler error.
+- Learner successfully ran the test suite after the correction.
+- Do not yet claim independent mastery of JUnit, MockMvc, static imports, or the Maven lifecycle; revisit through additional tests.
+
+**Next milestone**
+- Begin Barista's first real domain feature: define what a `Job` is and what information the system must store about it.
+- Start with the problem and a concrete example, not code or database schema.
+- Distinguish job data from job behavior/state transitions.
+- Ask the learner to propose the minimum information Barista needs to accept, identify, execute, and track a job.
+- Only after agreeing on the domain model, implement a simple Java `Job` representation and tests. Introduce persistence later, when the in-memory model is understood.
+
+**Teaching approach**
+- Continue simple, patient, analogy-led explanations with one central concept per lesson.
+- Progressively use interviewer-style challenges, but scaffold them from basic understanding to applied reasoning and then harder edge cases.
