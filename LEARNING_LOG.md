@@ -862,3 +862,20 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Teaching note**
 - Do not start by designing dozens of endpoints. Build and verify one vertical slice first.
 - Explain one concept at a time, with a concrete request/response example.
+
+
+### 2026-11-12 — Public API ownership decision: server-managed job identity and initial state
+
+**Learner decision**
+- For the proposed `POST /api/v1/jobs` contract, the learner correctly identified that Barista, not the client, should generate the job ID and assign the initial status.
+- The client supplies the requested work (job type and payload); Barista owns system-managed identity and lifecycle state.
+- This prevents clients from choosing duplicate/forged identifiers or claiming arbitrary lifecycle states such as SUCCEEDED before execution.
+
+**Contract principle**
+- Client-owned input: job type and payload (plus explicitly supported options later).
+- Server-owned fields: job ID, initial status, creation timestamps, attempt counters, and execution metadata.
+- On successful asynchronous acceptance, the proposed response uses HTTP 202 Accepted. This confirms that Barista accepted the request for processing, not that the job has completed.
+- UUIDv4 remains a proposed initial identifier strategy; no UUID code or database schema has been implemented yet.
+
+**Next step**
+- Continue designing the minimal public request/response schemas and minimal Job domain model before writing code.
