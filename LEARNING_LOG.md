@@ -908,3 +908,28 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Next learning step**
 - Understand common causes and observable effects of worker failure.
 - Then continue the Job model, including the attempt counter and retry limit, without adding checkpoint fields to the first implementation.
+
+
+### 2026-11-12 — First Job domain skeleton compiles
+
+**Implemented locally (learner-reported; not yet pushed to the repository)**
+- Added `com.barista.job.JobStatus` enum with `PENDING`, `RUNNING`, `RETRYING`, `SUCCEEDED`, and `DEAD`.
+- Added `com.barista.job.Job` with:
+  - `UUID id`, generated in the constructor with `UUID.randomUUID()`.
+  - `JobStatus status`, initialized to `PENDING`.
+  - `String type`, supplied through the constructor.
+- Learner ran `./mvnw compile` and reported that the build succeeds.
+
+**Scope and limitations**
+- This is only the initial domain skeleton. It does not yet include payload, attempt counters, retry limits, timestamps, validation, lifecycle methods, or tests.
+- Compilation verifies syntax and type consistency for the compiled sources, but does not yet verify domain behavior.
+- UUIDv4 remains the proposed identifier strategy.
+
+**Learning status**
+- Enum syntax was newly introduced and the learner implemented the five status values.
+- Learner implemented the initial Job fields and constructor, with successful compilation.
+- Getters/setters and ordinary Java class syntax are already familiar; avoid reteaching them unless a concrete issue arises.
+
+**Next step**
+- Design the representation of type-specific JSON job payloads. Start by explaining the generic key/value structure and why the queue cannot assume every job type has identical fields.
+- Then extend the Job model in a small step and test behavior before adding lifecycle complexity.
