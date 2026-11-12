@@ -809,3 +809,27 @@ Update this file at those checkpoints. Keep the main progress record concise and
 
 **Next step**
 - Begin the actual `Job` domain model. First decide the minimum job data and lifecycle needed by Barista; then implement a simple Java representation using a UUID identifier. Persistence and PostgreSQL schema come later.
+
+
+### 2026-11-12 — Clarification: API replicas, worker processes, and UUID version choice
+
+**API instances**
+- One API instance means one running copy/process of the Barista API application.
+- A single Spring Boot/Tomcat process can handle multiple concurrent requests using its request-handling thread pool and can use multiple CPU cores; it is not limited to one request at a time.
+- More API instances are an optional horizontal-scaling/redundancy strategy when one instance or one machine becomes a bottleneck or availability target requires replicas.
+- Running multiple instances on the same physical machine does not add hardware capacity; they share CPU, memory, network and other resources. Replicas are most useful across machines/containers, although multiple processes on one host may sometimes serve isolation or deployment purposes.
+- Do not assume Barista needs multiple API instances initially. Start with one API instance.
+- Keep API instances distinct from worker processes: API instances handle incoming HTTP requests; worker processes claim and execute background jobs. Barista may run one API instance and one or more worker processes independently.
+
+**UUID version clarification**
+- No UUID implementation has been added to the code yet.
+- The current recorded proposal is UUIDv4, generated with Java 21's `UUID.randomUUID()`; this is not UUIDv7.
+- Java 21's standard `java.util.UUID` API documents `randomUUID()` as generating a type-4 UUID and does not provide a built-in UUIDv7 factory.
+- UUIDv7 contains a Unix-millisecond timestamp in its most significant bits and random/optional monotonicity data in the remaining bits, making values approximately time-ordered according to RFC 9562. It may improve insertion locality for B-tree indexes relative to random UUIDv4, depending on the workload and implementation.
+- UUIDv7 also exposes approximate generation time and requires an additional library or custom, carefully tested implementation when targeting Java 21.
+- Do not select UUIDv7 solely because Barista could someday have multiple API instances. Choose based on the job identifier's database/index usage, operational requirements, privacy considerations, and dependency cost.
+- Current provisional recommendation remains UUIDv4 for the initial learning implementation because Java 21 supports it directly and no measured index-performance requirement exists. Revisit the choice when designing the schema; changing generation strategy later does not require changing PostgreSQL's `uuid` column type.
+
+**Teaching clarification**
+- When explaining horizontal scaling, distinguish adding concurrent threads/resources to one process, running additional processes on the same host, and distributing replicas across multiple machines.
+- Do not describe UUIDs as necessary for multiple API instances or imply multiple instances are required for concurrency.
