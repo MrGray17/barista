@@ -693,3 +693,48 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - The current topic is Spring Boot's test setup and the generated `contextLoads()` test.
 - The learner has been taught that `@SpringBootTest` asks Spring's test infrastructure to load the application context, and that initialization failures (such as an unsatisfied required dependency) can fail the test before the empty test method runs.
 - Continue with a small understanding check, then inspect or create a real HTTP endpoint test. Avoid adding more testing internals until the learner understands this flow.
+
+
+### 2026-11-12 — Long-term goal: become a thriving software engineer in the AI era
+
+**Learner's goal**
+- Barista is not only a portfolio project or a way to learn Spring. The learner wants the overall journey to prepare them to thrive as a software engineer in a rapidly changing, AI-enabled industry.
+- The target is durable engineering capability, adaptability, sound judgment, and the ability to deliver useful software—not merely collecting framework knowledge or producing code with AI.
+
+**Engineering capabilities to cultivate alongside Barista**
+1. **Strong fundamentals:** Java and the JVM, data structures and algorithms, HTTP and networking, databases and SQL, operating systems, concurrency, and core software design. Learn the underlying mechanisms rather than memorizing framework recipes.
+2. **End-to-end delivery:** turn a problem into a working, tested, documented, observable, secure, deployable feature. Understand the entire path from user/API contract through application logic, persistence, runtime, and operations.
+3. **Engineering judgment:** clarify requirements, identify constraints, compare options, reason about trade-offs, avoid unnecessary complexity, and explain why a design is appropriate.
+4. **Reliability and systems thinking:** understand failure modes, concurrency, data consistency, performance, security, observability, recovery, and operational cost. Use Barista's queue semantics as a practical laboratory for these skills.
+5. **Code quality and maintainability:** write readable code, modularize around real responsibilities, test behavior, review changes, refactor safely, and document important decisions.
+6. **AI fluency without dependency:** use AI as an accelerator for exploration, explanations, test ideas, code review, debugging hypotheses, and repetitive work. Verify outputs, inspect generated code, consult primary documentation when needed, and retain the ability to reason, implement, debug, and explain independently. Never treat generated code or confident explanations as proof of correctness.
+7. **Product and communication skills:** understand the user problem, define useful scope, communicate clearly, write concise technical documentation, discuss trade-offs, and collaborate through review and feedback.
+8. **Adaptability:** build transferable mental models and learn new tools/frameworks deliberately. Do not chase every trend; evaluate technologies by the problems they solve and evidence from real requirements.
+
+**Working method**
+- Every meaningful Barista feature should ideally produce both a software outcome and a learning outcome.
+- For each feature, practice: understand the requirement → identify constraints → design → implement → test → inspect failure cases → explain the decisions → document the result.
+- Use AI to scaffold learning, not replace the learner's thinking. The learner should attempt, predict, or state a hypothesis before receiving a complete solution when appropriate.
+- Gradually reduce hints as competence grows.
+- Maintain a living skills picture: what is understood, what has been applied, what has been independently demonstrated, and what remains weak.
+- Prefer a few deeply understood, completed features over many impressive-looking but fragile features.
+- Keep the project focused on a credible, reliable PostgreSQL-backed job queue before adding advanced infrastructure or trendy technologies.
+
+**How progress will be assessed**
+- Can the learner explain the problem and the design without relying on memorized wording?
+- Can they implement a small variation without copying the previous example?
+- Can they write tests that verify observable behavior?
+- Can they debug using evidence and distinguish symptoms from causes?
+- Can they explain trade-offs and identify what the system does NOT guarantee?
+- Can they use AI-generated suggestions critically and verify them independently?
+- Can they take a feature from requirement through implementation, tests, documentation, and operation?
+
+**Teaching commitment**
+- Coach for long-term engineering capability, not just completion of Barista.
+- Connect project lessons to transferable SWE principles and current AI-assisted engineering practices when relevant, without turning every lesson into a career lecture.
+- Be honest about skill gaps and the limits of any assessment. Celebrate verified progress, not activity alone.
+- Revisit this development plan periodically and adjust it based on demonstrated work, changing industry needs, and the learner's interests.
+
+**Immediate focus**
+- Finish the first automated HTTP test for `GET /hello` using a clear, beginner-friendly explanation.
+- Then begin Barista's first real domain feature: define a job, its data, and its valid lifecycle before building the job-submission API.
