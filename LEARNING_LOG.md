@@ -669,3 +669,27 @@ Update this file at those checkpoints. Keep the main progress record concise and
 
 **Repository synchronization note**
 - The latest check of the GitHub default branch found the learning log and architecture ADR, but not `pom.xml` or the local Java source paths. The locally working project is the current implementation state; remote source synchronization is separate from this learning milestone and Git instruction remains outside this track.
+
+
+### 2026-11-12 — Teaching agreement: patient, simple, analogy-led mastery
+
+**Learner request**
+- Learner studies this material with ChatGPT as their primary learning resource and wants to master Java and Spring.
+- Explicitly requests patience, simple explanations, and analogies throughout the learning journey.
+
+**Teaching commitments**
+- Explain every new concept from first principles; do not assume familiarity with framework vocabulary.
+- Prefer plain language and concrete analogies, then connect the analogy back to the exact Java/Spring mechanism.
+- Introduce one main concept at a time. Define new terms before using them.
+- Explain code line by line when it is introduced, including why it exists and what would happen if it were removed or changed.
+- Use small diagrams and runnable Barista examples when useful.
+- Distinguish what the learner must understand now from details that can wait.
+- Be patient when the learner asks the same question in a different way; treat that as evidence the explanation needs adjustment, not as a problem with the learner.
+- Maintain rigor and active learning: ask one question at a time, let the learner attempt, give hints before answers when appropriate, and use progressively harder interviewer-style challenges only after the foundation is clear.
+- When the learner says "I don't know" or feels overwhelmed, explain the answer calmly and check understanding with a simpler adjacent question before advancing.
+- Do not rush toward advanced Spring, architecture, or distributed-systems topics merely to cover more material. The goal is durable understanding and independent engineering skill.
+
+**Immediate learning state**
+- The current topic is Spring Boot's test setup and the generated `contextLoads()` test.
+- The learner has been taught that `@SpringBootTest` asks Spring's test infrastructure to load the application context, and that initialization failures (such as an unsatisfied required dependency) can fail the test before the empty test method runs.
+- Continue with a small understanding check, then inspect or create a real HTTP endpoint test. Avoid adding more testing internals until the learner understands this flow.
