@@ -1053,3 +1053,39 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Status**
 - Preferred future direction, endorsed by the learner as a design candidate. Not implemented and not yet a detailed accepted ADR.
 - Do not modify the current Job model to include circuit-breaker logic. Revisit this during the reliability/resilience stage after basic queue persistence, worker claiming, and retries are built.
+
+
+### 2026-11-13 — Learner refinement: recovery coordinator controls FIFO backlog dispatch
+
+**Learner proposal**
+- When a shared dependency recovers, a dedicated service/component should receive the recovery signal and start releasing the jobs that depend on that service in order (potentially FIFO), rather than sending a separate notification to every waiting job.
+
+**Preferred refinement**
+- Adopt a **Dependency Recovery Coordinator** that receives/observes the dependency's transition to healthy/CLOSED and coordinates backlog re-admission.
+- Keep responsibilities separate:
+  - Circuit breaker: decides whether calls to a dependency are allowed (CLOSED/OPEN/HALF_OPEN).
+  - Recovery coordinator / dependency-aware dispatcher: manages recovery probes, backlog release, admission rate, and ordering policy.
+  - Worker pool: claims jobs and executes their handlers. The coordinator must not itself execute business job handlers.
+  - PostgreSQL: durable job queue and shared dependency state.
+- Avoid per-job notifications and avoid moving the backlog into in-memory sleeping tasks. Keep jobs durable in PostgreSQL, associated with a dependency identity. A single dependency-level state change/event can make work eligible for dispatch.
+- After recovery is confirmed through HALF_OPEN, the coordinator closes the breaker and gradually admits eligible work from the affected dependency backlog. Workers continue to pull/claim jobs atomically.
+- Initial ordering recommendation: best-effort FIFO by original enqueue/creation time (with a stable tie-breaker such as job ID) among jobs eligible for that dependency. Do not promise strict completion ordering.
+- Clarify semantics:
+  - FIFO claim/start order can be approximated by ordered selection.
+  - With multiple workers, completion order may differ because job durations differ.
+  - PostgreSQL `SKIP LOCKED` allows workers to bypass rows already locked by another worker, so strict FIFO claim order is not guaranteed under concurrency.
+  - Strict start/completion order would require serialized dispatch/one-at-a-time execution or stronger coordination, reducing throughput. Do not impose this by default.
+- Backlog release should be paced using per-dependency concurrency and/or rate limits, plus jitter where useful, so recovery does not create a thundering herd.
+- The coordinator can signal a dispatcher/worker pool or adjust a shared admission gate; workers execute the actual jobs.
+- Dependency state and coordinator ownership must be durable/shared across processes (e.g. PostgreSQL state plus a lease) so multiple coordinators do not probe or release the backlog independently.
+
+**Open design questions**
+- Whether to implement a per-dependency dispatch lane with a configurable concurrency limit, rate limit, or both.
+- How to reconcile FIFO with priorities, scheduled jobs, retry due times, and fairness.
+- Whether the coordinator wakes workers through PostgreSQL notification/outbox or relies initially on worker polling.
+- How a job with multiple external dependencies is represented and gated.
+
+**Status**
+- Preferred future architecture; not implemented.
+- The learner endorsed circuit breaking and proposed centralized ordered backlog recovery. The design separates orchestration/admission from actual job execution.
+- Revisit after basic persistence, atomic claims, and worker execution exist.
