@@ -933,3 +933,33 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Next step**
 - Design the representation of type-specific JSON job payloads. Start by explaining the generic key/value structure and why the queue cannot assume every job type has identical fields.
 - Then extend the Job model in a small step and test behavior before adding lifecycle complexity.
+
+
+### 2026-11-13 — First Job lifecycle unit test passes
+
+**Implemented locally (learner-reported; application source/test changes have not yet been pushed to the repository)**
+- `Job` now has a `start()` operation that:
+  - Requires the current status to be `PENDING`.
+  - Rejects starts when `attempts >= maxAttempts`.
+  - Increments `attempts` only after validation succeeds.
+  - Changes the status to `RUNNING`.
+- The learner added read accessors for status and attempt count so behavior can be observed in tests.
+- Added `JobTest` under `src/test/java/com/barista/job/JobTest.java`.
+- The test creates a job with an empty payload, calls `start()`, and asserts `RUNNING` plus one attempt.
+
+**Verification**
+- Learner ran `./mvnw clean test`.
+- Maven compiled application and test sources and executed 3 tests total: 2 in `BaristaApplicationTests` and 1 in `JobTest`.
+- Reported result: 3 tests, 0 failures, 0 errors, 0 skipped; `BUILD SUCCESS`.
+- A subsequent `./mvnw compile` also reported `BUILD SUCCESS`.
+- VS Code displayed unresolved-symbol underlines despite Maven successfully compiling and executing the test. This points to an IDE Java language-server / Maven project synchronization issue, not a source compilation failure. Suggested reloading Maven/Java projects and cleaning the Java language-server workspace.
+- Mockito/JDK dynamic-agent warnings appeared during tests; they did not fail the build and are not the cause of the unresolved-symbol underlines.
+
+**Learning status**
+- Learner implemented the first state transition and a happy-path unit test.
+- The happy path is verified. Invalid transition and retry-limit behavior still need tests.
+- Do not claim the full Job lifecycle is complete or the model is fully verified yet.
+
+**Next step**
+- Resolve or confirm the VS Code language-server underlines after project reload.
+- Add tests for invalid start states and exhausted attempt limits, verifying that rejected operations leave the object's state unchanged.
