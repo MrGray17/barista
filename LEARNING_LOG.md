@@ -963,3 +963,34 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Next step**
 - Resolve or confirm the VS Code language-server underlines after project reload.
 - Add tests for invalid start states and exhausted attempt limits, verifying that rejected operations leave the object's state unchanged.
+
+
+### 2026-11-13 — Proposed future design: dependency-aware circuit breaker and recovery probes
+
+**Learner's proposal**
+- When a job fails because a shared external service is unavailable, stop repeatedly attempting every dependent job.
+- Keep dependent jobs waiting and use a separate lightweight mechanism to check whether the external service has recovered.
+- Once the dependency responds successfully, resume eligible jobs.
+
+**Engineering assessment**
+- This is a strong direction and corresponds to a combination of the **Circuit Breaker pattern**, dependency health probing, and queue-level deferral/backpressure.
+- Prefer one coordinated breaker/probe per dependency (e.g. the email provider), not one disposable probe job per failed business job. Otherwise many jobs can create duplicate probes and amplify load.
+- Circuit breaker states:
+  - **CLOSED:** ordinary requests are allowed; failures are observed.
+  - **OPEN:** ordinary requests are rejected/deferred without contacting the unhealthy dependency; wait for a cooldown.
+  - **HALF_OPEN:** allow only a small, bounded number of test requests. Close on successful recovery; reopen on failure.
+- Do not open the breaker because of every job failure. Classify failures: connection failures, timeouts, and suitable service-unavailable responses may indicate dependency health; invalid payloads, authentication/configuration errors, and job-specific failures generally do not prove a shared outage. A configurable failure threshold/window helps avoid reacting to one isolated transient failure.
+- A health probe must test a meaningful capability and be safe/lightweight. A successful TCP ping or generic health endpoint does not necessarily prove the actual operation (e.g. sending email) is ready.
+- When the breaker opens, jobs that depend on that service should be deferred rather than repeatedly claimed and failed. Job-level state and dependency-level availability are distinct concerns; the precise representation (e.g. RETRYING/availableAt versus a dependency gate or a future BLOCKED state) remains undecided.
+- When the dependency recovers, release work gradually with concurrency/rate limits or jitter. Releasing a large backlog all at once can create a thundering herd and immediately overload the recovering service.
+- Per-job retry/backoff and dependency-level circuit breaking complement one another; the breaker does not replace retries for isolated transient errors.
+- In a multi-process/multi-worker Barista deployment, a purely in-memory breaker is not shared. A future implementation must coordinate breaker state and ensure only a bounded number of half-open probes across workers/instances (e.g. shared state or an ownership/lease mechanism). Do not solve this in the initial Job domain model.
+- A timeout can occur after the external service performed the side effect but before Barista received the response. Retrying may duplicate that side effect; idempotency/deduplication remains a separate requirement.
+
+**Status**
+- Proposed architecture only. No circuit breaker, health-probe job, dependency registry, blocked-job state, or retry scheduling has been implemented or formally accepted.
+- Current Barista implementation remains focused on the basic Job lifecycle and its initial tests.
+
+**Next design revisit**
+- Revisit this idea during the reliability/resilience stage, after basic retries, worker execution, and database-backed claiming exist.
+- Decide how handlers declare dependencies, how failure categories are classified, how breaker state is shared, how jobs are deferred/released, and how recovery traffic is rate-limited.
