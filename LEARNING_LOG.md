@@ -1021,3 +1021,35 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Recommended architecture, not yet formally accepted or implemented.
 - The current local `Job` class has only a preliminary `availableAt` field proposal; do not claim database scheduling, polling, locking, backoff, or circuit-breaking code exists.
 - Revisit exact status transitions, timestamp ownership, database schema/indexes, polling cadence, and atomic claim implementation during persistence/worker design.
+
+
+### 2026-11-13 — Preferred future reliability architecture: circuit breaker plus recovery coordinator
+
+**Learner alignment**
+- Learner endorsed the circuit-breaker direction and clarified their original idea: when a shared external service becomes unavailable, defer all jobs depending on it and create a separate lightweight monitor that periodically probes the service, notifies/releases affected work when recovery is confirmed, then stops.
+- Preferred direction is to combine the learner's recovery-monitor idea with the Circuit Breaker pattern rather than choose one.
+
+**Proposed architecture (future reliability stage; not implemented)**
+- A **dependency-level Circuit Breaker** protects each shared external dependency (e.g. an email provider), with CLOSED, OPEN, and HALF_OPEN states.
+- A **Dependency Recovery Coordinator** is the logical component responsible for scheduling/performing bounded probes while a breaker is OPEN and coordinating the transition through HALF_OPEN.
+- On an outage, ordinary calls to that dependency are blocked/deferred. Jobs that depend on it remain durably stored and are not repeatedly claimed just to fail. A job that already invoked the handler and received a failure has consumed an attempt; jobs deferred before handler invocation do not consume attempts.
+- "Notify dependent jobs" should generally mean update/release the dependency-level gate or make the work eligible again, not send a separate notification to each Job object. Jobs are durable records; workers consult shared dependency state before dispatch. Avoid mass-updating thousands of jobs unless a concrete query/indexing need justifies it.
+- Recovery probes must be bounded, rate-limited, and meaningful for the capability Barista needs. A generic ICMP ping or TCP connection may not prove that the actual service operation is usable. Prefer a safe readiness/health endpoint or a lightweight capability check; never create harmful side effects just to probe.
+- After a successful half-open probe, close the breaker and gradually release eligible jobs using rate/concurrency controls and jitter to prevent a thundering herd.
+- If the probe fails, reopen the breaker and schedule another probe after a cooldown.
+- Use failure classification and thresholds/windows; a single invalid payload or authentication/configuration error should not automatically be treated as a dependency outage.
+- In a multi-worker/multi-API-instance deployment, the coordinator must be logically single-owner per dependency at a time. Persist breaker state and use a lease/lock or another coordination mechanism so process crashes allow another instance to take over and so multiple workers do not flood the dependency with simultaneous probes.
+- The coordinator may be implemented by a supervised background loop or scheduled task, not necessarily as a disposable customer-facing Barista job. It starts when the breaker opens, remains active while probing is required, and stops after recovery; durable state and lease expiry make it recoverable after process failure.
+- Keep per-job retry policy separate: it handles an individual execution failure and calculates `available_at`; the dependency breaker is a shared gate that can defer otherwise-ready jobs while a common service is unhealthy. These mechanisms complement each other.
+
+**Open design questions for later**
+- How handlers declare one or more dependency identities (e.g. `email-provider`).
+- Which failure categories and thresholds open a breaker.
+- What readiness/capability probe is safe for each dependency.
+- Whether breaker state and coordinator leases live in PostgreSQL initially.
+- How workers efficiently observe breaker state and release work gradually.
+- How to handle a provider outage discovered after a side effect may already have occurred; idempotency remains necessary.
+
+**Status**
+- Preferred future direction, endorsed by the learner as a design candidate. Not implemented and not yet a detailed accepted ADR.
+- Do not modify the current Job model to include circuit-breaker logic. Revisit this during the reliability/resilience stage after basic queue persistence, worker claiming, and retries are built.
