@@ -994,3 +994,30 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Next design revisit**
 - Revisit this idea during the reliability/resilience stage, after basic retries, worker execution, and database-backed claiming exist.
 - Decide how handlers declare dependencies, how failure categories are classified, how breaker state is shared, how jobs are deferred/released, and how recovery traffic is rate-limited.
+
+
+### 2026-11-13 — Recommended retry scheduling design: database-backed eligibility
+
+**Recommendation for the initial PostgreSQL-backed queue (design only; not implemented)**
+- Store a durable `available_at` timestamp on each job. It is a **not-before** time: a worker must not execute the job before this instant.
+- When a running attempt fails:
+  - If attempts remain, set status to `RETRYING` and compute `available_at = failure_time + retry_delay`.
+  - If the attempt limit is exhausted, set status to `DEAD`.
+- Keep a retrying job in `RETRYING` while it waits. Once `available_at` has arrived, it becomes eligible for a worker to claim. The claim can transition it directly from `RETRYING` to `RUNNING` and begin the next attempt.
+- Likewise, an immediately runnable `PENDING` job is eligible when its `available_at` has arrived.
+- **Avoid a separate scheduler process solely to promote due jobs from `RETRYING` to `PENDING`** in the first implementation. Workers can poll PostgreSQL for eligible jobs and atomically claim them. This removes an unnecessary moving part.
+- The eventual claim operation must use a database transaction and concurrency-safe row locking (planned: PostgreSQL `SELECT ... FOR UPDATE SKIP LOCKED`) so multiple workers cannot claim the same job. The SQL sketch discussed in the lesson is illustrative, not production SQL.
+- Use database time for the eligibility comparison where practical, avoiding dependence on potentially skewed worker clocks.
+- Retry policy (including exponential backoff, a maximum delay, jitter, and optional server-provided `Retry-After`) computes the next `available_at`. The first implementation should begin with a simple bounded policy and evolve deliberately.
+- `available_at` is a not-before constraint, not an exact execution guarantee: polling interval, queue load, and worker capacity can make actual execution later.
+- The proposed dependency-level circuit breaker is a separate mechanism. When a dependency breaker is OPEN, dependent work should be deferred without repeatedly contacting the dependency; a probe/half-open policy controls recovery. A job that is deferred without actually invoking its handler should not consume a normal execution attempt. The exact integration with claiming and dependency state remains a future design task.
+- On recovery, release work gradually using concurrency/rate controls and jitter to avoid a thundering herd.
+
+**Important design correction**
+- Earlier lessons described a separate scheduler moving `RETRYING` jobs back to `PENDING`. The recommended initial design does not require that extra transition or process: a due `RETRYING` job can be claimed directly by a worker and transition to `RUNNING`.
+- Retain `RETRYING` as an observable state meaning that an attempt failed and the job is waiting for another attempt.
+
+**Status**
+- Recommended architecture, not yet formally accepted or implemented.
+- The current local `Job` class has only a preliminary `availableAt` field proposal; do not claim database scheduling, polling, locking, backoff, or circuit-breaking code exists.
+- Revisit exact status transitions, timestamp ownership, database schema/indexes, polling cadence, and atomic claim implementation during persistence/worker design.
