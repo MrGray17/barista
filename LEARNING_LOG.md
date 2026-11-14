@@ -1089,3 +1089,25 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Preferred future architecture; not implemented.
 - The learner endorsed circuit breaking and proposed centralized ordered backlog recovery. The design separates orchestration/admission from actual job execution.
 - Revisit after basic persistence, atomic claims, and worker execution exist.
+
+
+### 2026-11-14 — RetryPolicy implementation compiles
+
+**Implemented locally (learner-reported; application source has not yet been pushed)**
+- Added `RetryPolicy` in `com.barista.job`.
+- It stores immutable `initialDelay` and `maxDelay` configuration supplied through its constructor.
+- Constructor rejects null durations, a non-positive initial delay, and a maximum delay smaller than the initial delay.
+- `calculateDelay(int attempts)` rejects attempts below 1 and calculates capped exponential backoff by starting at the initial delay and doubling for each subsequent attempt.
+- The implementation checks whether doubling would reach/exceed the maximum before multiplying, avoiding multiplication overflow for the capped calculation.
+- Learner ran `./mvnw compile` and reported BUILD SUCCESS.
+
+**Learning status**
+- Constructor-based configured policy object was selected after comparing it with passing the retry configuration to every static method call. Rationale: validate/store policy configuration once, reuse a consistent policy instance, and allow distinct policies to coexist.
+- `Duration` was explained as an immutable amount of elapsed time, distinct from `Instant` (a point in time).
+- Exponential backoff and the maximum-delay cap were explained and implemented.
+- Compilation is verified; retry calculation behavior has not yet been tested with unit tests.
+
+**Next step**
+- Review the Job and RetryPolicy integration boundary. The application/use-case layer should obtain the current time, ask RetryPolicy for a delay, calculate the next availability Instant, and pass that Instant to `Job.fail(...)`.
+- Keep Job focused on enforcing state transitions; keep RetryPolicy focused on delay calculation.
+- Then batch-test backoff results, input validation, Job transitions, retry scheduling, and exhausted-attempt behavior before declaring the domain milestone verified.
