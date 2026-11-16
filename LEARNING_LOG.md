@@ -68,7 +68,7 @@ The current sequence reflects the decisions made during the Barista build. Testi
 | Phase | Main topics | Intended outcome | Status |
 |---|---|---|---|
 | 0. Foundations | Java 21, Maven, Spring Boot, HTTP, first endpoint, build and test workflow | Run and understand the basic Spring application | Completed |
-| 1. Job domain model | Job identity and payload, lifecycle state machine, attempts, timestamps, retry scheduling, terminal failure, exponential backoff | Express and test the core job lifecycle independently of infrastructure | Implemented locally; learner reports tests pass |
+| 1. Job domain model | Job identity and payload, lifecycle state machine, attempts, timestamps, retry scheduling, terminal failure, exponential backoff | Express and test the core job lifecycle independently of infrastructure | Source and tests pushed to main; learner reports tests pass |
 | 2. Application layer | Use cases, application services, failure classification, dependency injection, Clock, orchestration of Job and RetryPolicy | Coordinate complete job operations without putting orchestration into domain entities | Next |
 | 3. Public REST API | Controllers, request/response DTOs, JSON, validation, error mapping, versioned routes, OpenAPI | Submit, inspect, retry, and cancel jobs over HTTP | Planned |
 | 4. Persistence | PostgreSQL, schema design, Flyway, repositories, SQL, transactions, indexes, domain/persistence mapping | Persist jobs and execution history durably | Planned |
@@ -80,7 +80,7 @@ The current sequence reflects the decisions made during the Barista build. Testi
 | 10. Dashboard and developer experience | React, TypeScript, OpenAPI, SSE, SDKs, developer/operator documentation | Make Barista easy to integrate with and operate | Planned |
 | 11. Production readiness | Docker, CI/CD, deployment, configuration/secrets, backups, load tests, profiling, operational documentation | Make Barista reproducible, deployable, measurable, and maintainable | Planned |
 
-**Current implementation boundary:** Phase 1 is a local implementation milestone, not evidence that persistence, worker execution, or distributed concurrency exists. The domain model is currently an in-memory Java model.
+**Current implementation boundary:** Phase 1 source and tests are present on GitHub main. This is not evidence that persistence, worker execution, or distributed concurrency exists. The domain model is currently an in-memory Java model.
 ## Progress record
 
 ### 2026-11-08 — Project orientation and background-processing concepts
@@ -1164,9 +1164,21 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - A FailureClassifier was discussed as the component that distinguishes retryable and permanent failures. Neither it nor the application service has been implemented.
 
 **Repository synchronization**
-- On 2026-11-16, the GitHub default branch did not contain the expected paths src/main/java/com/barista/job/Job.java, JobStatus.java, RetryPolicy.java, or the corresponding test files. The local implementation and tests therefore have not been verified as pushed to main.
-- This log update records learner-reported local progress; it does not claim to upload or commit the local Java source.
+- At the initial 2026-11-16 check, the expected Java source and test paths were absent from GitHub main.
+- The learner then synchronized local main with the remote learning-log commit using fetch/rebase and successfully pushed the local implementation.
+- A subsequent GitHub fetch confirmed all five expected files are now present on main: Job.java, JobStatus.java, RetryPolicy.java, JobTest.java, and RetryPolicyTest.java.
+- The learning-log update itself is a separate GitHub commit. The source and test files were pushed by the learner from the local repository.
+- The checked remote Job.java still contains a manual null guard in start() plus a commented Objects.requireNonNull alternative. This is cleanup only; retain one clear null-validation approach and remove the commented alternative.
+- The checked remote RetryPolicy.java validates both constructor arguments for null, then validates the duration invariants, then assigns its final fields. This validation-before-initialization structure is present in the pushed file.
+
+**Verified source review: remaining test-coverage improvements**
+- JobTest currently verifies initial start, rejecting a second start, retry scheduling/eligibility, and reaching DEAD after the configured third attempt.
+- Add a focused test that a permanent failure can call markDead() while attempts still remain. This verifies the reason markDead() is separate from attempt exhaustion.
+- Add a focused test that scheduleRetry() rejects a RUNNING job after its attempt budget is exhausted. The implementation contains this guard, but the current JobTest does not directly exercise it.
+- The premature-retry test should also assert that a rejected early start leaves status RETRYING and attempts unchanged.
+- RetryPolicyTest currently checks null initialDelay, zero initialDelay, maxDelay smaller than initialDelay, invalid attempt counts, capped progression, and the extreme-duration overflow case. It does not yet test a negative initialDelay or null maxDelay; add those cases for complete coverage of the constructor's explicit constraints.
+- Learner reported ./mvnw clean test succeeded, but no exact Maven test count or CI run was captured here. Treat the passing result as learner-reported.
 
 **Exact next step**
-- Confirm the local source and test files are committed and pushed to main, then fetch/review the actual current RetryPolicy.java and JobTest.java if needed.
+- Complete the small test-coverage improvements and remove the commented null-check alternative, then rerun ./mvnw clean test.
 - Begin Phase 2 by designing the HandleJobFailure application use case and its dependencies before implementing it.
