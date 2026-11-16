@@ -2,7 +2,7 @@
 
 > A living record of the learning journey and engineering progress behind Barista.
 >
-> **Last updated:** 2026-11-11
+> **Last updated:** 2026-11-16
 
 ## Why this file exists
 
@@ -63,23 +63,24 @@ Start with substantial guidance, then gradually reduce it as competence grows. N
 
 ## Roadmap
 
-The sequence below is a guide, not a rigid deadline. Testing, logging, security awareness, and good engineering practices should appear as soon as they are relevant.
+The current sequence reflects the decisions made during the Barista build. Testing, logging, security awareness, and engineering review are integrated throughout rather than postponed until a late phase.
 
-| Stage | Main topics | Intended outcome |
-|---|---|---|
-| 0. Foundations | Project purpose, HTTP/client-server basics, Java essentials, Git, Maven, Spring Boot fundamentals | Explain the problem and run a basic Java/Spring application |
-| 1. Job domain | Classes, objects, methods, enums, interfaces, collections, exceptions, handler abstraction | Model a job and its lifecycle in Java |
-| 2. Backend API | HTTP, REST, JSON, Spring controllers/services, dependency injection, validation, DTOs | Submit and inspect jobs through an API |
-| 3. Persistence | SQL, PostgreSQL, Docker, schema design, Flyway, JDBC/JPA, transactions, indexes | Persist jobs and retrieve them after restart |
-| 4. Workers | Worker loop, handler registry, thread pools, job claiming, database locking, state machine | Execute jobs with multiple competing workers safely |
-| 5. Reliability | Leases, heartbeats, crash recovery, retries, backoff, idempotency, timeouts, dead-letter handling | Recover work after failures with at-least-once semantics |
-| 6. Scheduling and control | Delayed/recurring jobs, cron, priorities, fairness, rate limiting, backpressure | Control when and how quickly work executes |
-| 7. Workflows | Dependencies, DAGs, fan-out/fan-in, cycle detection, workflow recovery | Orchestrate multi-step jobs |
-| 8. Testing and resilience | JUnit, Mockito, Testcontainers, integration/concurrency tests, failure experiments | Verify critical guarantees with repeatable tests |
-| 9. Operations and security | Actuator, Micrometer, Prometheus, Grafana, logs, authentication, authorization | Operate and diagnose the service safely |
-| 10. Dashboard and DX | React, TypeScript, OpenAPI, TanStack Query, SSE, SDK | Let developers and operators use Barista comfortably |
-| 11. Production | Docker, CI/CD, deployment, backups, load tests, profiling, documentation | Make Barista reproducible, deployable, measurable, and maintainable |
+| Phase | Main topics | Intended outcome | Status |
+|---|---|---|---|
+| 0. Foundations | Java 21, Maven, Spring Boot, HTTP, first endpoint, build and test workflow | Run and understand the basic Spring application | Completed |
+| 1. Job domain model | Job identity and payload, lifecycle state machine, attempts, timestamps, retry scheduling, terminal failure, exponential backoff | Express and test the core job lifecycle independently of infrastructure | Implemented locally; learner reports tests pass |
+| 2. Application layer | Use cases, application services, failure classification, dependency injection, Clock, orchestration of Job and RetryPolicy | Coordinate complete job operations without putting orchestration into domain entities | Next |
+| 3. Public REST API | Controllers, request/response DTOs, JSON, validation, error mapping, versioned routes, OpenAPI | Submit, inspect, retry, and cancel jobs over HTTP | Planned |
+| 4. Persistence | PostgreSQL, schema design, Flyway, repositories, SQL, transactions, indexes, domain/persistence mapping | Persist jobs and execution history durably | Planned |
+| 5. Worker engine | Handler registry, worker loop, atomic claiming, thread pools, multiple worker processes, FOR UPDATE SKIP LOCKED | Execute jobs safely with competing workers | Planned |
+| 6. Reliability | At-least-once semantics, leases, heartbeats, crash recovery, retry jitter, idempotency, timeouts, dead-letter handling, dependency circuit breakers | Recover from execution and infrastructure failures | Planned |
+| 7. Scheduling and control | Delayed and recurring jobs, cron, priorities, fairness, rate limiting, backpressure | Control when and how quickly work is admitted and executed | Planned |
+| 8. Workflows | Dependencies, DAGs, fan-out/fan-in, cycle detection, workflow state and recovery | Orchestrate multi-step jobs | Planned |
+| 9. Quality, observability, and security | Unit/integration/concurrency tests, Testcontainers, failure experiments, logs, metrics, Prometheus, Grafana, authentication and authorization | Verify, diagnose, and operate Barista safely | Planned; testing is continuous |
+| 10. Dashboard and developer experience | React, TypeScript, OpenAPI, SSE, SDKs, developer/operator documentation | Make Barista easy to integrate with and operate | Planned |
+| 11. Production readiness | Docker, CI/CD, deployment, configuration/secrets, backups, load tests, profiling, operational documentation | Make Barista reproducible, deployable, measurable, and maintainable | Planned |
 
+**Current implementation boundary:** Phase 1 is a local implementation milestone, not evidence that persistence, worker execution, or distributed concurrency exists. The domain model is currently an in-memory Java model.
 ## Progress record
 
 ### 2026-11-08 — Project orientation and background-processing concepts
@@ -1111,3 +1112,61 @@ Update this file at those checkpoints. Keep the main progress record concise and
 - Review the Job and RetryPolicy integration boundary. The application/use-case layer should obtain the current time, ask RetryPolicy for a delay, calculate the next availability Instant, and pass that Instant to `Job.fail(...)`.
 - Keep Job focused on enforcing state transitions; keep RetryPolicy focused on delay calculation.
 - Then batch-test backoff results, input validation, Job transitions, retry scheduling, and exhausted-attempt behavior before declaring the domain milestone verified.
+
+### 2026-11-16 — Phase 1 domain model and RetryPolicy completed locally
+
+**Implemented locally (learner-reported; not present on the GitHub default branch at the expected source paths when checked today)**
+
+**Job domain model**
+- Job now receives createdAt from its caller instead of reading the system clock internally. This makes creation time explicit and supports deterministic scenarios.
+- Added constructor overloading:
+  - A constructor accepting type, payload, and creation time delegates to the full constructor using the default maximum of 3 attempts.
+  - A constructor accepting maxAttempts allows per-job configuration and rejects values below 1.
+  - Constructor chaining centralizes validation and initialization.
+- Constructor validates type, payload, creation time, and maximum attempts; it creates a defensive, unmodifiable copy of the top-level payload map.
+- start(Instant now) permits only PENDING or RETRYING jobs, rejects jobs at the attempt limit and jobs whose availableAt is still in the future, then increments attempts and transitions to RUNNING.
+- succeed() allows only RUNNING → SUCCEEDED.
+- Replaced the ambiguous nullable fail(Instant) operation with explicit domain operations:
+  - scheduleRetry(Instant nextAvailableAt) requires a running job, a non-null retry timestamp, and remaining attempts; it updates availableAt and transitions to RETRYING.
+  - markDead() allows a running job to become DEAD, including for permanent failures before the attempt limit is exhausted.
+  - hasAttemptsRemaining() exposes the attempt-limit rule without exposing the field.
+- JobStatus retains PENDING, RUNNING, RETRYING, SUCCEEDED, and DEAD.
+
+**RetryPolicy**
+- RetryPolicy is a configured instance holding immutable initialDelay and maxDelay values. This was chosen over passing both configuration values to every calculation so configuration is validated once and multiple differently configured policies can coexist.
+- Constructor constraints: both durations must be non-null; initial delay must be positive; maximum delay must be greater than or equal to the initial delay.
+- calculateDelay(attempts) rejects attempts below 1 and implements capped exponential backoff: min(initialDelay × 2^(attempts - 1), maxDelay).
+- Before doubling, the implementation compares the current delay with maxDelay - delay to detect when doubling would reach or exceed the cap. This avoids performing a potentially overflowing multiplication.
+- The configured maxAttempts belongs to Job (execution budget); maxDelay belongs to RetryPolicy (upper bound on waiting time). These are separate concerns.
+- Duration represents an amount of time; Instant represents a point in time. The application layer will eventually add the calculated duration to an injected clock to obtain the next availableAt timestamp.
+
+**Tests and verification**
+- Learner reports that the updated Job lifecycle tests and RetryPolicyTest pass under ./mvnw clean test. No exact test count was provided in the conversation.
+- RetryPolicyTest covers the initial delay, exponential progression, maximum-delay cap, invalid attempt numbers, invalid configuration (including null and invalid duration values), and the extreme-duration overflow boundary.
+- The Job tests were migrated from the removed fail() API to scheduleRetry() and markDead() and updated to supply createdAt. The learner reported the full suite succeeds.
+- Do not infer that all tests have been reviewed from their final source: the final updated JobTest.java and RetryPolicy.java were not both re-shared in full after the last edits.
+
+**Design understanding introduced**
+- Job protects lifecycle invariants; RetryPolicy calculates a delay; the future application service decides whether to retry or terminate and coordinates the components.
+- Retryability and remaining attempts are separate questions. A permanent failure can call markDead() even when attempts remain.
+- The application layer will own failure classification, current-time acquisition through an injected Clock, calculation of nextAvailableAt, and the decision between scheduleRetry() and markDead().
+- The retrying job remains in RETRYING while it waits. In the planned PostgreSQL design, workers can claim a due RETRYING job directly; no separate process is needed merely to promote it to PENDING.
+- The in-memory Job object does not provide cross-thread or cross-process claim safety. PostgreSQL transactions and atomic claiming will provide distributed coordination later.
+
+**Small review follow-ups**
+- In the last shared Job.java version, start() still used a manual null check and retained a commented alternative using Objects.requireNonNull. This is a cleanup/consistency issue, not a demonstrated behavior defect; verify the current local file and keep only one guard.
+- Separating all RetryPolicy constructor validation from field assignment was recommended for consistency/readability. The design rationale was explained, but the final RetryPolicy.java source was not re-shared afterward; verify the actual file before treating that style adjustment as implemented.
+- Retry jitter is not implemented. It remains a future improvement to reduce synchronized retry bursts.
+
+**Application-layer architecture introduced but not implemented**
+- An Application Service coordinates a use case; it does not replace domain rules.
+- The proposed first use case is HandleJobFailure: classify the failure, check job.hasAttemptsRemaining(), ask RetryPolicy for a delay when appropriate, obtain time from Clock, then call scheduleRetry() or markDead().
+- A FailureClassifier was discussed as the component that distinguishes retryable and permanent failures. Neither it nor the application service has been implemented.
+
+**Repository synchronization**
+- On 2026-11-16, the GitHub default branch did not contain the expected paths src/main/java/com/barista/job/Job.java, JobStatus.java, RetryPolicy.java, or the corresponding test files. The local implementation and tests therefore have not been verified as pushed to main.
+- This log update records learner-reported local progress; it does not claim to upload or commit the local Java source.
+
+**Exact next step**
+- Confirm the local source and test files are committed and pushed to main, then fetch/review the actual current RetryPolicy.java and JobTest.java if needed.
+- Begin Phase 2 by designing the HandleJobFailure application use case and its dependencies before implementing it.
