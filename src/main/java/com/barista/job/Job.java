@@ -130,4 +130,8 @@ public class Job {
     public int getAttempts() {
         return attempts;
     }
+
+    public Instant getAvailableAt () {
+        return availableAt ;
+    }
 }
