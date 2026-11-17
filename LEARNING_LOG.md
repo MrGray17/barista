@@ -2,7 +2,7 @@
 
 > A living record of the learning journey and engineering progress behind Barista.
 >
-> **Last updated:** 2026-11-16
+> **Last updated:** 2026-11-17
 
 ## Why this file exists
 
@@ -69,7 +69,7 @@ The current sequence reflects the decisions made during the Barista build. Testi
 |---|---|---|---|
 | 0. Foundations | Java 21, Maven, Spring Boot, HTTP, first endpoint, build and test workflow | Run and understand the basic Spring application | Completed |
 | 1. Job domain model | Job identity and payload, lifecycle state machine, attempts, timestamps, retry scheduling, terminal failure, exponential backoff | Express and test the core job lifecycle independently of infrastructure | Source and tests pushed to main; learner reports tests pass |
-| 2. Application layer | Use cases, application services, failure classification, dependency injection, Clock, orchestration of Job and RetryPolicy | Coordinate complete job operations without putting orchestration into domain entities | Next |
+| 2. Application layer | Use cases, application services, failure classification, dependency injection, Clock, orchestration of Job and RetryPolicy | Coordinate complete job operations without putting orchestration into domain entities | In progress: failure handling implemented and behavior tested locally; Spring wiring remains |
 | 3. Public REST API | Controllers, request/response DTOs, JSON, validation, error mapping, versioned routes, OpenAPI | Submit, inspect, retry, and cancel jobs over HTTP | Planned |
 | 4. Persistence | PostgreSQL, schema design, Flyway, repositories, SQL, transactions, indexes, domain/persistence mapping | Persist jobs and execution history durably | Planned |
 | 5. Worker engine | Handler registry, worker loop, atomic claiming, thread pools, multiple worker processes, FOR UPDATE SKIP LOCKED | Execute jobs safely with competing workers | Planned |
@@ -1182,3 +1182,64 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Exact next step**
 - Complete the small test-coverage improvements and remove the commented null-check alternative, then rerun ./mvnw clean test.
 - Begin Phase 2 by designing the HandleJobFailure application use case and its dependencies before implementing it.
+
+
+### 2026-11-17 — Phase 2: failure handling implemented and behavior tested locally
+
+**Implemented**
+- Added `RetryableJobException` in `com.barista.job`. It is the explicit signal a job handler can use to indicate that a failure may be retried. It supports a message and a message-plus-cause constructor.
+- Added the `FailureClassifier` interface and `DefaultFailureClassifier`. The default implementation classifies `RetryableJobException` as retryable; other exception types are treated as permanent failures under the current policy.
+- Added `HandleJobFailure` in `com.barista.application.job`. It coordinates the failure-handling use case:
+  - Reject null job/failure inputs.
+  - Reject a job that is not currently RUNNING.
+  - Mark a non-retryable failure as DEAD.
+  - Mark a retryable failure as DEAD if the attempt budget is exhausted.
+  - Otherwise calculate a retry delay, add it to the injected clock's current Instant, and ask the Job domain object to schedule the retry.
+- The use case receives `FailureClassifier`, `RetryPolicy`, and `Clock` through constructor injection. It does not instantiate these dependencies itself.
+- Added `HandleJobFailureTest` with four behavioral scenarios. The learner reported the tests work after adding these cases; the exact final Maven test count was not supplied.
+
+**Behavioral scenarios covered**
+1. Retryable failure with attempts remaining → `RETRYING`; attempts remain at the count reached when execution started; `availableAt` equals the fixed current time plus the calculated delay.
+2. Permanent/ordinary exception → `DEAD`; handling the failure does not increment the attempt count.
+3. Retryable failure with no attempts remaining → `DEAD`; retryability does not override the configured attempt budget.
+4. Failure handling invoked on a non-RUNNING job → `IllegalStateException`; the job remains in `PENDING` and its attempt count remains unchanged.
+
+**Concepts learned and engineering principles worth retaining**
+- **Domain logic vs application orchestration:** `Job` owns and protects valid lifecycle transitions. `RetryPolicy` calculates a delay. `FailureClassifier` classifies a failure. `HandleJobFailure` coordinates these components for one use case. Keeping these responsibilities separate makes each component easier to reason about and test.
+- **Retryability and retry availability are different questions:** a failure can be retryable while the job has no attempts left. The application service must check both conditions before scheduling another attempt.
+- **Attempt counting:** an attempt is consumed when execution starts (`job.start(now)`), not when failure handling runs. Handling a failure chooses the next state; it must not increment the attempt count again.
+- **Explicit failure signaling:** the current Java-side contract uses `RetryableJobException` to signal transient/retryable failures. The exception's class is a signal used by the classifier; it is not a universal truth about the underlying cause. Handler/integration code has context to decide whether an observed failure is transient.
+- **Default classification policy:** unknown exception types are permanent under the current `DefaultFailureClassifier`. This is a deliberate fail-closed default for retries, not proof that every ordinary exception is inherently permanent. A future handler/integration may translate known transient conditions into the retryable signal.
+- **Interface vs implementation:** `FailureClassifier` expresses the contract; `DefaultFailureClassifier` supplies today's policy. The interface leaves a policy boundary replaceable, but this does not mean Barista currently needs several classifier implementations. Avoid adding strategies until a real requirement appears.
+- **Runtime type checks:** `instanceof` tests the actual runtime type of an exception object. A variable declared as `Exception` can still refer to a `RetryableJobException`, and `instanceof` checks the object's actual type.
+- **Exception causes:** a custom exception constructor that accepts both a message and a cause can preserve the underlying exception. This maintains diagnostic context when a low-level error is wrapped in a domain/application-level signal.
+- **Deterministic time:** injecting `Clock` lets production code use a system clock while tests use `Clock.fixed(...)`. The test can then assert an exact retry timestamp without sleeping or depending on wall-clock timing.
+- **Time types:** `Duration` represents an amount of time; `Instant` represents a point on the timeline. Retry scheduling combines them: `nextAvailableAt = clock.instant().plus(delay)`.
+- **Behavioral tests:** the tests assert externally meaningful outcomes (status, attempts, scheduled time, thrown exception), rather than merely checking that a particular line or helper method ran.
+- **State preservation on rejection:** checking the job's state after an expected exception proves that an invalid operation was rejected without partially mutating the object.
+- **JUnit assertion conventions:** `assertEquals(expected, actual)` communicates the comparison clearly; `assertThrows(ExceptionType.class, executable)` verifies that an operation rejects an invalid request.
+- **A green test suite has a scope:** these tests validate the in-memory application use case and its interaction with the Job/RetryPolicy objects. They do not yet prove Spring can construct the use case, that a worker invokes it, or that retry state is persisted safely across processes.
+
+**Engineering decisions**
+- Keep failure handling in the application layer; do not move orchestration into `Job`.
+- Keep the explicit retryable exception signal for the initial Java handler contract. Do not build a large exception taxonomy yet.
+- Keep `Clock` injected to make time-dependent behavior deterministic.
+- Defer separate null-input tests for now. Null guards exist, but the four current tests prioritize the core lifecycle and retry behavior.
+- Do not add Spring annotations to the domain model. The next step is to wire the application components at the composition/configuration boundary.
+
+**Repository and Git status**
+- Learner created local commit `7f449e4` with message `feat: implement job failure handling`. Git reported six files changed and 220 insertions.
+- The push to `origin/main` was rejected as non-fast-forward because the remote branch contains commits not yet integrated locally. The local feature commit remains committed; it has not yet been confirmed on GitHub.
+- This learning-log update is being recorded on the remote default branch. The local branch will therefore need to fetch and rebase onto the updated remote `main` before pushing the feature commit. Do not force-push.
+
+**Not yet implemented or verified**
+- Spring bean configuration / dependency injection for the classifier, retry policy, clock, and `HandleJobFailure`.
+- A worker execution loop that calls `HandleJobFailure` after a handler throws.
+- PostgreSQL persistence of job state or retry timestamps.
+- Distributed concurrency, atomic claims, crash recovery, leases, and at-least-once behavior.
+- Separate null-argument tests; these were deliberately deferred.
+
+**Exact next step**
+1. Synchronize local Git history with the now-updated remote branch using `git fetch origin` and `git pull --rebase origin main`; resolve conflicts only if Git reports them.
+2. Push the rebased local feature commit with `git push origin main`.
+3. Then continue Phase 2 by configuring Spring beans at the application composition boundary and verifying application-context startup.
