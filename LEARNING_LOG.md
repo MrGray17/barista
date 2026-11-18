@@ -69,7 +69,7 @@ The current sequence reflects the decisions made during the Barista build. Testi
 |---|---|---|---|
 | 0. Foundations | Java 21, Maven, Spring Boot, HTTP, first endpoint, build and test workflow | Run and understand the basic Spring application | Completed |
 | 1. Job domain model | Job identity and payload, lifecycle state machine, attempts, timestamps, retry scheduling, terminal failure, exponential backoff | Express and test the core job lifecycle independently of infrastructure | Source and tests pushed to main; learner reports tests pass |
-| 2. Application layer | Use cases, application services, failure classification, dependency injection, Clock, orchestration of Job and RetryPolicy | Coordinate complete job operations without putting orchestration into domain entities | In progress: failure handling implemented and behavior tested locally; Spring wiring remains |
+| 2. Application layer | Use cases, application services, failure classification, dependency injection, Clock, orchestration of Job and RetryPolicy | Coordinate complete job operations without putting orchestration into domain entities | Failure handling and Spring wiring implemented; test suite passes locally (learner-reported) |
 | 3. Public REST API | Controllers, request/response DTOs, JSON, validation, error mapping, versioned routes, OpenAPI | Submit, inspect, retry, and cancel jobs over HTTP | Planned |
 | 4. Persistence | PostgreSQL, schema design, Flyway, repositories, SQL, transactions, indexes, domain/persistence mapping | Persist jobs and execution history durably | Planned |
 | 5. Worker engine | Handler registry, worker loop, atomic claiming, thread pools, multiple worker processes, FOR UPDATE SKIP LOCKED | Execute jobs safely with competing workers | Planned |
@@ -1243,3 +1243,47 @@ Update this file at those checkpoints. Keep the main progress record concise and
 1. Synchronize local Git history with the now-updated remote branch using `git fetch origin` and `git pull --rebase origin main`; resolve conflicts only if Git reports them.
 2. Push the rebased local feature commit with `git push origin main`.
 3. Then continue Phase 2 by configuring Spring beans at the application composition boundary and verifying application-context startup.
+
+### 2026-11-18 — Phase 2: Spring dependency injection wired
+
+**Implemented and pushed to GitHub main**
+- Added `com.barista.config.BaristaConfiguration` under the `com.barista` root package. Because `BaristaApplication` is in `com.barista` and uses `@SpringBootApplication`, the configuration class is within Spring Boot's default component-scan boundary.
+- Registered four Spring beans with `@Bean` methods:
+  - `FailureClassifier` backed by `DefaultFailureClassifier`.
+  - `RetryPolicy` configured with a 2-second initial delay and a 1-minute maximum delay. These are currently hard-coded defaults, not externalized application properties.
+  - `Clock` backed by `Clock.systemUTC()`.
+  - `HandleJobFailure`, constructed using method-parameter injection. Spring resolves the three required dependencies and supplies the managed beans to the factory method.
+- Kept Spring annotations and configuration out of the job domain classes. `HandleJobFailure` continues to use constructor injection, and the configuration class acts as the composition boundary.
+- The configuration uses method-parameter injection for `handleJobFailure(...)`, rather than direct calls between `@Bean` methods. This makes the dependencies explicit and does not rely on full `@Configuration` method-proxy interception.
+
+**Verification**
+- Learner ran `./mvnw clean test` after adding the configuration and reported `BUILD SUCCESS`.
+- The test suite includes the existing `@SpringBootTest` context startup test (`contextLoads()`), the `MockMvc` GET `/hello` endpoint test, and the domain/application behavior tests.
+- `contextLoads()` is an application-context smoke test: Spring must start and create the required eagerly initialized singleton beans for the test to pass. It does not replace the focused behavioral tests for `HandleJobFailure`.
+- No exact final test count or CI workflow result was captured. Treat the successful run as learner-reported local verification.
+
+**Concepts introduced and practised**
+- Maven source layout: `src/main/java` for production Java code, `src/main/resources` for runtime resources, and `src/test/java` for tests.
+- Java package names map to directory paths below the source root; packages organize code by responsibility.
+- The root package of `@SpringBootApplication` establishes the default component-scan boundary, so subpackages such as `com.barista.config` are discovered.
+- `@Configuration` marks a Spring configuration class; `@Bean` registers the object returned by a factory method with the Spring container.
+- Default Spring bean scope is singleton: one instance per bean definition per application context, not one instance per class or one instance across multiple Barista processes.
+- A singleton service should not casually store per-job mutable state in instance fields. Concurrent invocations share those fields; job-specific inputs should normally be passed to methods or held in per-execution objects, while durable job state will ultimately live in PostgreSQL.
+- Constructor injection communicates required dependencies. `@Bean` method parameters let Spring resolve and supply dependencies when creating another bean.
+- A regular `contextLoads()` test can have an empty method body because the `@SpringBootTest` context startup itself is the behavior being checked.
+- GitLens is installed in the learner's VS Code environment and can help inspect commit history, blame, branches, and diffs; it does not replace Git's commit/push operations.
+
+**Repository state**
+- Confirmed on GitHub `main`: commit `4de06c65829545a5dbeb0c0c13868d3a9a6877bf`, message `feat: wire failure handling with Spring`.
+- That commit adds `BaristaConfiguration.java` and includes a whitespace-only reindent of `HandleJobFailureTest.java`; the observed diff shows formatting changes, not a change to the test assertions or scenarios. Normalize the test file's indentation in a later cleanup if desired.
+- This learning-log update is being recorded as a separate documentation commit on the remote default branch.
+
+**Still not implemented**
+- A worker execution loop that invokes handlers and calls `HandleJobFailure` after execution failures.
+- PostgreSQL persistence of jobs, retry timestamps, and job events.
+- Atomic job claiming, multiple worker processes, leases, heartbeats, crash recovery, and at-least-once execution guarantees.
+- Externalized retry configuration; the current 2-second / 1-minute values are provisional defaults.
+
+**Next step**
+- Begin Phase 3 by designing the public job-submission REST API: define the first use case and its request/response contract before adding controller code. Keep persistence concerns out of this phase until the API contract and application boundary are understood.
+
