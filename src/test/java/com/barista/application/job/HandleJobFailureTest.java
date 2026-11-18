@@ -19,111 +19,111 @@ import com.barista.job.RetryableJobException;
 
 public class HandleJobFailureTest {
 
-    @Test
-    public void retryableFailureWithAttemptsRemainingSchedulesRetry() {
+        @Test
+        public void retryableFailureWithAttemptsRemainingSchedulesRetry() {
 
-        FailureClassifier failureClassifier = new DefaultFailureClassifier();
+                FailureClassifier failureClassifier = new DefaultFailureClassifier();
 
-        RetryPolicy retryPolicy = new RetryPolicy(Duration.ofSeconds(2), Duration.ofMinutes(1));
+                RetryPolicy retryPolicy = new RetryPolicy(Duration.ofSeconds(2), Duration.ofMinutes(1));
 
-        Instant now = Instant.parse("2026-11-17T12:00:00Z");
-        Clock clock = Clock.fixed(now, ZoneOffset.UTC);
+                Instant now = Instant.parse("2026-11-17T12:00:00Z");
+                Clock clock = Clock.fixed(now, ZoneOffset.UTC);
 
-        HandleJobFailure handleFailure = new HandleJobFailure(failureClassifier,
-                retryPolicy,
-                clock);
+                HandleJobFailure handleFailure = new HandleJobFailure(failureClassifier,
+                                retryPolicy,
+                                clock);
 
-        Job job = new Job("send-email",
-                Map.of(),
-                now,
-                3);
+                Job job = new Job("send-email",
+                                Map.of(),
+                                now,
+                                3);
 
-        job.start(now);
-        RetryableJobException excep = new RetryableJobException("An exception occured");
+                job.start(now);
+                RetryableJobException excep = new RetryableJobException("An exception occured");
 
-        handleFailure.handle(job, excep);
+                handleFailure.handle(job, excep);
 
-        assertEquals(JobStatus.RETRYING, job.getStatus());
-        assertEquals(1, job.getAttempts());
-        assertEquals(now.plusSeconds(2), job.getAvailableAt());
-    }
+                assertEquals(JobStatus.RETRYING, job.getStatus());
+                assertEquals(1, job.getAttempts());
+                assertEquals(now.plusSeconds(2), job.getAvailableAt());
+        }
 
-    @Test
-    public void aNonRetryableFailureMarksTheJobDead() {
-        Instant now = Instant.parse("2026-11-17T12:00:00Z");
-        Job job = new Job("send-email", Map.of(), now, 3);
+        @Test
+        public void aNonRetryableFailureMarksTheJobDead() {
+                Instant now = Instant.parse("2026-11-17T12:00:00Z");
+                Job job = new Job("send-email", Map.of(), now, 3);
 
-        FailureClassifier failureClassifier = new DefaultFailureClassifier();
-        RetryPolicy retryPolicy = new RetryPolicy(Duration.ofSeconds(2), Duration.ofMinutes(1));
-        Clock clock = Clock.fixed(now, ZoneOffset.UTC);
+                FailureClassifier failureClassifier = new DefaultFailureClassifier();
+                RetryPolicy retryPolicy = new RetryPolicy(Duration.ofSeconds(2), Duration.ofMinutes(1));
+                Clock clock = Clock.fixed(now, ZoneOffset.UTC);
 
-        HandleJobFailure handleFailure = new HandleJobFailure(failureClassifier,
-                retryPolicy,
-                clock);
+                HandleJobFailure handleFailure = new HandleJobFailure(failureClassifier,
+                                retryPolicy,
+                                clock);
 
-        Exception failure = new Exception("Invalid Job Payload");
+                Exception failure = new Exception("Invalid Job Payload");
 
-        job.start(now);
-        handleFailure.handle(job, failure);
+                job.start(now);
+                handleFailure.handle(job, failure);
 
-        assertEquals(JobStatus.DEAD, job.getStatus());
-        assertEquals(1, job.getAttempts());
+                assertEquals(JobStatus.DEAD, job.getStatus());
+                assertEquals(1, job.getAttempts());
 
-    }
+        }
 
-    @Test
-    public void retryableFailureWithNoAttemptsRemainingMarksJobDead() {
+        @Test
+        public void retryableFailureWithNoAttemptsRemainingMarksJobDead() {
 
-        FailureClassifier failureClassifier = new DefaultFailureClassifier();
+                FailureClassifier failureClassifier = new DefaultFailureClassifier();
 
-        RetryPolicy retryPolicy = new RetryPolicy(Duration.ofSeconds(2), Duration.ofMinutes(1));
+                RetryPolicy retryPolicy = new RetryPolicy(Duration.ofSeconds(2), Duration.ofMinutes(1));
 
-        Instant now = Instant.parse("2026-11-17T12:00:00Z");
-        Clock clock = Clock.fixed(now, ZoneOffset.UTC);
+                Instant now = Instant.parse("2026-11-17T12:00:00Z");
+                Clock clock = Clock.fixed(now, ZoneOffset.UTC);
 
-        HandleJobFailure handleFailure = new HandleJobFailure(failureClassifier,
-                retryPolicy,
-                clock);
+                HandleJobFailure handleFailure = new HandleJobFailure(failureClassifier,
+                                retryPolicy,
+                                clock);
 
-        Job job = new Job("send-email",
-                Map.of(),
-                now,
-                1);
+                Job job = new Job("send-email",
+                                Map.of(),
+                                now,
+                                1);
 
-        job.start(now);
-        RetryableJobException excep = new RetryableJobException("An exception occured");
+                job.start(now);
+                RetryableJobException excep = new RetryableJobException("An exception occured");
 
-        handleFailure.handle(job, excep);
+                handleFailure.handle(job, excep);
 
-        assertEquals(JobStatus.DEAD, job.getStatus());
-        assertEquals(1, job.getAttempts());
-    }
+                assertEquals(JobStatus.DEAD, job.getStatus());
+                assertEquals(1, job.getAttempts());
+        }
 
-    @Test
-    public void nonRunningJobCannotBeHandled() {
-        FailureClassifier failureClassifier = new DefaultFailureClassifier();
+        @Test
+        public void nonRunningJobCannotBeHandled() {
+                FailureClassifier failureClassifier = new DefaultFailureClassifier();
 
-        RetryPolicy retryPolicy = new RetryPolicy(Duration.ofSeconds(2), Duration.ofMinutes(1));
+                RetryPolicy retryPolicy = new RetryPolicy(Duration.ofSeconds(2), Duration.ofMinutes(1));
 
-        Instant now = Instant.parse("2026-11-17T12:00:00Z");
-        Clock clock = Clock.fixed(now, ZoneOffset.UTC);
+                Instant now = Instant.parse("2026-11-17T12:00:00Z");
+                Clock clock = Clock.fixed(now, ZoneOffset.UTC);
 
-        HandleJobFailure handleFailure = new HandleJobFailure(failureClassifier,
-                retryPolicy,
-                clock);
+                HandleJobFailure handleFailure = new HandleJobFailure(failureClassifier,
+                                retryPolicy,
+                                clock);
 
-        Job job = new Job("send-email",
-                Map.of(),
-                now,
-                1);
+                Job job = new Job("send-email",
+                                Map.of(),
+                                now,
+                                1);
 
-        RetryableJobException failure = new RetryableJobException("An exception occured");
+                RetryableJobException failure = new RetryableJobException("An exception occured");
 
-        assertThrows(IllegalStateException.class,
-                () -> handleFailure.handle(job, failure));
+                assertThrows(IllegalStateException.class,
+                                () -> handleFailure.handle(job, failure));
 
-        assertEquals(JobStatus.PENDING, job.getStatus());
-        assertEquals(0, job.getAttempts());
-    }
+                assertEquals(JobStatus.PENDING, job.getStatus());
+                assertEquals(0, job.getAttempts());
+        }
 
 }
