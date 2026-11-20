@@ -134,4 +134,16 @@ public class Job {
     public Instant getAvailableAt () {
         return availableAt ;
     }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }
