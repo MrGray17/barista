@@ -131,8 +131,8 @@ public class Job {
         return attempts;
     }
 
-    public Instant getAvailableAt () {
-        return availableAt ;
+    public Instant getAvailableAt() {
+        return availableAt;
     }
 
     public UUID getId() {
@@ -146,4 +146,68 @@ public class Job {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public Map<String, Object> getPayload() {
+        return payload;
+    };
+
+    public int getMaxAttempts() {
+        return maxAttempts;
+    }
+
+    private Job(
+            UUID id,
+            String type,
+            Map<String, Object> payload,
+            JobStatus status,
+            int attempts,
+            int maxAttempts,
+            Instant createdAt,
+            Instant availableAt) {
+
+        this.id = Objects.requireNonNull(id);
+        this.type = Objects.requireNonNull(type);
+        this.payload = Collections.unmodifiableMap(
+                new HashMap<>(Objects.requireNonNull(payload)));
+        this.status = Objects.requireNonNull(status);
+        this.createdAt = Objects.requireNonNull(createdAt);
+        this.availableAt = Objects.requireNonNull(availableAt);
+
+        if (type.isBlank()) {
+            throw new IllegalArgumentException("Job type cannot be blank");
+        }
+
+        if (maxAttempts < 1) {
+            throw new IllegalArgumentException("Invalid max attempts");
+        }
+
+        if (attempts < 0 || attempts > maxAttempts) {
+            throw new IllegalArgumentException("Invalid attempts");
+        }
+
+        this.attempts = attempts;
+        this.maxAttempts = maxAttempts;
+    }
+
+    public static Job restore(
+            UUID id,
+            String type,
+            Map<String, Object> payload,
+            JobStatus status,
+            int attempts,
+            int maxAttempts,
+            Instant createdAt,
+            Instant availableAt) {
+
+        return new Job(
+                id,
+                type,
+                payload,
+                status,
+                attempts,
+                maxAttempts,
+                createdAt,
+                availableAt);
+    }
+
 }
