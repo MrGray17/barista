@@ -1287,3 +1287,30 @@ Update this file at those checkpoints. Keep the main progress record concise and
 **Next step**
 - Begin Phase 3 by designing the public job-submission REST API: define the first use case and its request/response contract before adding controller code. Keep persistence concerns out of this phase until the API contract and application boundary are understood.
 
+### November 24, 2026 — Domain Model Hardening
+
+Implemented:
+- Deep defensive copying of nested payloads.
+- Recursive immutable Map and List structures.
+- Identity-based circular reference detection.
+- Temporary algorithm state using method overloading.
+- Exception-safe cleanup using try-finally.
+- Integration with job creation and restoration.
+
+Concepts learned:
+- Shallow vs deep copying.
+- Object identity vs logical equality.
+- IdentityHashMap and Set.
+- Recursive object graph traversal.
+- Method overloading and delegation.
+- Exception propagation and cleanup.
+
+Deferred:
+- BigInteger and BigDecimal support.
+- Non-finite floating-point validation.
+- Comprehensive domain unit tests.
+
+Next:
+- Refine the repository persistence contract.
+- Enforce database state invariants.
+- Implement the job submission API.
