@@ -1314,3 +1314,45 @@ Next:
 - Refine the repository persistence contract.
 - Enforce database state invariants.
 - Implement the job submission API.
+
+## Milestone — REST API: Job Submission and Retrieval
+
+### Implemented
+- Created the `SubmitJob` and `GetJob` application use cases.
+- Registered application use cases using Spring Java configuration.
+- Implemented `POST /api/v1/jobs` for persistent job submission.
+- Implemented `GET /api/v1/jobs/{id}` for job retrieval.
+- Implemented HTTP response handling with `ResponseEntity`.
+- Centralized domain-to-DTO mapping using the `JobResponse.from()` static factory method.
+- Preserved separation between API, application, domain and infrastructure layers.
+
+### Concepts learned
+- Spring MVC and REST controllers.
+- Constructor dependency injection and bean registration.
+- `@RequestBody`, `@ResponseBody`, `@PathVariable` and `@Valid`.
+- JSON serialization and deserialization.
+- HTTP status codes and response headers.
+- Static factory methods.
+- DTO mapping.
+- Optional-based resource retrieval.
+- Separation of architectural responsibilities.
+
+### Verification
+- Valid job submission returns HTTP 201.
+- Existing job retrieval returns HTTP 200.
+- Missing jobs return HTTP 404.
+- Invalid UUIDs return HTTP 400.
+- Invalid request bodies return HTTP 400.
+- Persisted jobs survive application restarts.
+- Existing automated test suite: 23 passed, 0 failures, 0 errors, 0 skipped.
+- Maven build successful.
+
+### Deferred improvements
+- Comprehensive automated REST API tests.
+- Additional database integrity constraints.
+- Detailed validation error responses.
+- Numeric payload validation improvements.
+- Build warning cleanup.
+
+### Next milestone
+Implement the worker execution engine, starting with job handler contracts, handler registration, job execution and safe job claiming.

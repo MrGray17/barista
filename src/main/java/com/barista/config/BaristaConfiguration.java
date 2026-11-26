@@ -4,7 +4,10 @@ import org.springframework.context.annotation.Configuration;
 
 import com.barista.application.job.DefaultFailureClassifier;
 import com.barista.application.job.FailureClassifier;
+import com.barista.application.job.GetJob;
 import com.barista.application.job.HandleJobFailure;
+import com.barista.application.job.JobRepository;
+import com.barista.application.job.SubmitJob;
 import com.barista.job.RetryPolicy;
 
 import java.time.Clock;
@@ -41,6 +44,16 @@ public class BaristaConfiguration {
                 failureClassifier,
                 retryPolicy,
                 clock);
+    }
+
+    @Bean
+    public SubmitJob submitJob(JobRepository jobRepository, Clock clock) {
+        return new SubmitJob(jobRepository, clock);
+    }
+
+    @Bean 
+    public GetJob getJob(JobRepository jobRepository) {
+        return new GetJob(jobRepository) ;
     }
 
 }
