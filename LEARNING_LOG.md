@@ -1356,3 +1356,229 @@ Next:
 
 ### Next milestone
 Implement the worker execution engine, starting with job handler contracts, handler registration, job execution and safe job claiming.
+## November 27–28, 2026 — Worker Engine: Handler Infrastructure and Execution
+
+### Objective
+
+Build the foundation of Barista's execution engine while maintaining
+separation between job orchestration, business logic, failure handling,
+and persistence.
+
+### Implementation
+
+#### JobHandler
+- Introduced a common interface for all job handlers.
+- Defined supportedType() and execute(Job job).
+- Enabled polymorphic execution without coupling the engine to
+  concrete handler implementations.
+
+#### HandlerRegistry
+- Implemented registration through constructor injection.
+- Used Map<String, JobHandler> for efficient handler lookup.
+- Prevented duplicate registrations using containsKey().
+- Validated null handlers and invalid supported types.
+- Created an unmodifiable mapping using Map.copyOf().
+- Implemented findHandler() using Optional.ofNullable().
+
+#### PrintMessageHandler
+- Implemented the first concrete job handler.
+- Registered the supported type "message.print".
+- Extracted the message from the job payload.
+- Validated the runtime type using instanceof.
+- Performed safe casting from Object to String.
+- Eliminated a silent failure caused by returning normally
+  when the required payload field was missing.
+
+#### Spring Integration
+- Registered PrintMessageHandler as a JobHandler bean.
+- Registered HandlerRegistry as a Spring bean.
+- Used collection-based dependency injection with List<JobHandler>.
+- Kept application classes independent of Spring annotations.
+
+#### ExecuteJob
+- Designed the application-level execution coordinator.
+- Established HandlerRegistry and HandleJobFailure as its dependencies.
+- Rejects null jobs and jobs that are not RUNNING.
+- Resolves the appropriate handler.
+- Delegates execution to the concrete handler.
+- Delegates execution failures to HandleJobFailure.
+- Marks successful executions as SUCCEEDED.
+- Treats unsupported job types as permanent failures for now.
+- Operates entirely in memory at this stage.
+
+The implementation was provided and explained.
+Final local integration and verification remain pending.
+
+### Java Concepts Covered
+
+- Interfaces and implementation contracts.
+- Runtime polymorphism and dynamic method dispatch.
+- Generic types and type erasure.
+- Map and Set differences.
+- HashMap lookup and duplicate detection.
+- containsKey(), get(), put() and putIfAbsent().
+- final references versus unmodifiable objects.
+- Defensive copying with Map.copyOf().
+- Optional, ofNullable(), isPresent(), isEmpty() and get().
+- Short-circuit evaluation.
+- Runtime type checking with instanceof.
+- Explicit casting versus string conversion.
+- Exception propagation and try-catch control flow.
+- Constructor validation and invariant enforcement.
+
+### Spring Concepts Covered
+
+- Bean registration using @Bean.
+- Factory methods and managed object instances.
+- Registering interfaces through concrete implementations.
+- Collection-based dependency injection.
+- Application context and dependency resolution.
+- Distinguishing bean creation from business method execution.
+
+### Testing Concepts Covered
+
+- Mockito and dependency isolation.
+- Mock objects versus real implementations.
+- Stubbing behavior with when().thenReturn().
+- Arrange, Act, Assert testing pattern.
+- Object identity verification using assertSame().
+- Exception verification using assertThrows().
+- Designing tests that detect plausible incorrect implementations.
+
+Core HandlerRegistry test scenarios:
+- Retrieve the registered handler instance.
+- Return an empty Optional for an unknown type.
+- Reject two distinct handlers supporting the same type.
+
+Remaining defensive validation tests are deferred.
+Empty test methods must not be counted as verified behavior.
+
+### Jackson Revision
+
+- Serialization with writeValueAsString().
+- Deserialization with readValue().
+- TypeReference and preservation of generic type metadata.
+- Relationship between Java objects, JSON and PostgreSQL JSONB.
+
+### Engineering Decisions
+
+1. Use a Map rather than a Set for handler registration because
+   uniqueness must be enforced by supported job type.
+
+2. Register handlers at application startup and keep the registry
+   unmodifiable during runtime.
+
+3. Avoid dynamic plugin loading until a concrete requirement exists.
+
+4. Achieve future service availability through horizontal scaling,
+   graceful shutdown and rolling deployments rather than runtime
+   mutation of the registry.
+
+5. Keep handler implementations responsible for business logic.
+   Barista is responsible for coordinating their execution.
+
+6. Keep lifecycle management outside concrete handlers.
+
+7. Keep job claiming separate from execution.
+   ExecuteJob receives an already-claimed RUNNING job.
+
+8. Keep job.succeed() outside the handler's try-catch block
+   to avoid misclassifying lifecycle errors as handler failures.
+
+9. Continue using PostgreSQL as the single source of truth.
+   Do not introduce Redis or additional distributed infrastructure
+   without a demonstrated requirement.
+
+### Distributed Systems Concepts Introduced
+
+- Shared mutable state.
+- Race conditions.
+- Atomic check-and-write operations.
+- ConcurrentHashMap and atomic putIfAbsent().
+- Horizontal scaling.
+- Rolling deployments.
+- Service availability versus instance availability.
+- Handler capability mismatches during mixed-version deployments.
+- Eliminating concurrency problems through immutability.
+
+These concepts have been introduced but are not yet implemented
+as distributed execution guarantees.
+
+### Debugging and Engineering Lessons
+
+- VS Code IntelliSense and compiler diagnostics are separate
+  from AI autocomplete.
+- Saving all files restored Java diagnostic highlighting.
+- The exact cause of the editor synchronization issue was
+  not established.
+- Maven incremental compilation may reuse existing classes.
+- clean compile forces a fresh compilation.
+- Read nested exception chains to identify root causes.
+- A failed application startup does not necessarily indicate
+  incorrect Java business logic.
+
+### Verification
+
+- Production and test source compilation succeeded.
+- Initial application startup failed because PostgreSQL
+  was unreachable on localhost:5433.
+- Latest Maven test run completed successfully,
+  as confirmed by the learner.
+- Exact test count has not been recorded.
+- Handler infrastructure is ready for the next milestone.
+- Dedicated ExecuteJob behavioral tests remain deferred.
+
+### Implementation Boundary
+
+- Handler registration and lookup are implemented.
+- Concrete handler execution is implemented.
+- Execution lifecycle orchestration is implemented.
+- Execution outcomes are not yet persisted.
+- Atomic claiming and concurrent worker execution
+  are not yet implemented.
+
+### Learner Progress
+
+Practised independently:
+- Designing handler registration using a Map.
+- Duplicate detection using containsKey().
+- Implementing a concrete JobHandler.
+- Payload extraction, runtime type validation and casting.
+- Spring bean registration and collection injection.
+
+Required additional guidance:
+- Mockito and dependency isolation.
+- Optional-based retrieval.
+- Execution orchestration.
+- Distinguishing application coordination from business logic.
+
+Continue prioritizing independent implementation, prediction,
+debugging, and explanation over passive code generation.
+
+### Deferred Improvements
+
+- Comprehensive registry validation tests.
+- ExecuteJob behavior tests.
+- Structured logging instead of demonstration console output.
+- Capability-aware job claiming.
+- Graceful worker shutdown.
+- Rolling deployment compatibility.
+- Separation of demonstration handlers from the core engine.
+
+### Next Milestone — Atomic Job Claiming
+
+Teach and implement:
+- Database transactions.
+- Race conditions between competing workers.
+- PostgreSQL row-level locking.
+- SELECT FOR UPDATE.
+- SKIP LOCKED.
+- Atomic job claiming.
+- Transaction boundaries.
+- Persisting execution outcomes.
+- Worker polling and concurrent execution.
+
+Core engineering question:
+
+How can multiple workers retrieve jobs from the same PostgreSQL
+database without claiming the same job simultaneously?

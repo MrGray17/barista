@@ -8,7 +8,12 @@ import com.barista.application.job.GetJob;
 import com.barista.application.job.HandleJobFailure;
 import com.barista.application.job.JobRepository;
 import com.barista.application.job.SubmitJob;
+import com.barista.application.worker.ExecuteJob;
+import com.barista.application.worker.HandlerRegistry;
+import com.barista.application.worker.JobHandler;
+import com.barista.application.worker.handler.PrintMessageHandler;
 import com.barista.job.RetryPolicy;
+import java.util.List;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -51,9 +56,24 @@ public class BaristaConfiguration {
         return new SubmitJob(jobRepository, clock);
     }
 
-    @Bean 
+    @Bean
     public GetJob getJob(JobRepository jobRepository) {
-        return new GetJob(jobRepository) ;
+        return new GetJob(jobRepository);
     }
 
+    @Bean
+    public JobHandler printMessageHandler() {
+        return new PrintMessageHandler();
+    }
+
+    @Bean
+    public HandlerRegistry handlerRegistry(List<JobHandler> handlers) {
+        return new HandlerRegistry(handlers);
+    }
+
+    @Bean
+    public ExecuteJob executeJob(HandlerRegistry handlerRegistry,
+            HandleJobFailure handleJobFailure) {
+        return new ExecuteJob(handlerRegistry, handleJobFailure);
+    }
 }
